@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Scheduled Posts — Telegram Post Scheduler</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&display=swap" rel="stylesheet"/>
+<style>
+/* ════════════════════════════════════════════════════
+   RESET & ROOT — exact same tokens as create-post.html
+════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:          #070B14;
+  --surface:     #0D1220;
+  --raised:      #121929;
+  --lift:        #18223A;
+  --border:      rgba(255,255,255,.07);
+  --border-md:   rgba(255,255,255,.12);
+  --border-hi:   rgba(255,255,255,.2);
+  --accent:      #2563EB;
+  --accent-glow: rgba(37,99,235,.35);
+  --accent-soft: rgba(37,99,235,.12);
+  --accent-bd:   rgba(37,99,235,.28);
+  --sky:         #0EA5E9;
+  --sky-soft:    rgba(14,165,233,.12);
+  --sky-bd:      rgba(14,165,233,.28);
+  --green:       #10B981;
+  --green-soft:  rgba(16,185,129,.12);
+  --green-bd:    rgba(16,185,129,.28);
+  --amber:       #F59E0B;
+  --amber-soft:  rgba(245,158,11,.1);
+  --amber-bd:    rgba(245,158,11,.25);
+  --red:         #EF4444;
+  --red-soft:    rgba(239,68,68,.12);
+  --red-bd:      rgba(239,68,68,.28);
+  --txt:         #F1F5F9;
+  --txt-2:       #94A3B8;
+  --txt-3:       #4A5568;
+  --font-h:      'Syne',sans-serif;
+  --font-b:      'DM Sans',sans-serif;
+  --r-sm:        8px;
+  --r:           12px;
+  --r-lg:        18px;
+  --r-xl:        24px;
+  --shadow:      0 8px 32px rgba(0,0,0,.55);
+  --shadow-sm:   0 2px 10px rgba(0,0,0,.4);
+  --tr:          .18s ease;
+}
+
+html{font-size:14px;-webkit-font-smoothing:antialiased}
+body{
+  font-family:var(--font-b);
+  background:var(--bg);
+  color:var(--txt);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ambient background — identical to create-post & dashboard */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 70% 55% at 15% -5%,  rgba(37,99,235,.09) 0%,transparent 60%),
+    radial-gradient(ellipse 50% 40% at 90% 105%, rgba(14,165,233,.06) 0%,transparent 55%);
+  pointer-events:none;z-index:0;
+}
+
+/* ════════════════════════════════════════════════════
+   SIDEBAR — exact copy from create-post.html
+════════════════════════════════════════════════════ */
+.sidebar{
+  position:fixed;left:0;top:0;bottom:0;
+  width:230px;
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  z-index:50;
+  display:flex;flex-direction:column;
+  transition:transform .3s ease;
+}
+.brand{
+  display:flex;align-items:center;gap:10px;
+  padding:20px 18px;
+  border-bottom:1px solid var(--border);
+  min-height:60px;
+}
+.brand-ico{
+  width:36px;height:36px;flex-shrink:0;
+  background:linear-gradient(135deg,#2563EB,#0EA5E9);
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;
+  box-shadow:0 4px 14px rgba(37,99,235,.4);
+}
+.brand-name{font-family:var(--font-h);font-size:.9rem;font-weight:700;letter-spacing:-.02em}
+.brand-sub{font-size:.65rem;color:var(--txt-3);margin-top:1px}
+
+.nav{flex:1;padding:14px 10px;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+.nav-label{
+  font-size:.62rem;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--txt-3);
+  padding:14px 8px 6px;
+}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 10px;
+  border-radius:var(--r-sm);
+  color:var(--txt-2);
+  font-size:.82rem;font-weight:400;
+  cursor:pointer;
+  transition:all var(--tr);
+  text-decoration:none;
+  position:relative;
+  user-select:none;
+}
+.nav-item:hover{background:rgba(255,255,255,.04);color:var(--txt)}
+.nav-item.active{background:var(--accent-soft);color:#60A5FA;font-weight:500}
+.nav-item.active::before{
+  content:'';position:absolute;left:0;top:20%;bottom:20%;
+  width:3px;background:var(--accent);
+  border-radius:0 4px 4px 0;
+}
+.nav-ico{
+  width:18px;height:18px;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;opacity:.8;
+}
+.nav-item.active .nav-ico,.nav-item:hover .nav-ico{opacity:1}
+.nav-pill{
+  margin-left:auto;
+  background:var(--lift);border:1px solid var(--border);
+  color:var(--txt-3);font-size:.62rem;font-weight:600;
+  padding:2px 7px;border-radius:999px;
+  min-width:22px;text-align:center;
+  transition:all var(--tr);
+}
+.nav-pill.s{background:var(--accent-soft);color:#60A5FA;border-color:var(--accent-bd)}
+.nav-pill.g{background:var(--green-soft);color:var(--green);border-color:var(--green-bd)}
+
+.sidebar-foot{
+  padding:14px 18px;
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;
+  font-size:.72rem;color:var(--txt-3);
+}
+.status-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 8px var(--green);
+  animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 8px var(--green)}50%{opacity:.5;box-shadow:0 0 14px var(--green)}}
+
+/* ════════════════════════════════════════════════════
+   TOPBAR — exact copy from create-post.html
+════════════════════════════════════════════════════ */
+.topbar{
+  position:fixed;top:0;left:230px;right:0;height:60px;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 28px;
+  gap:14px;z-index:40;
+  backdrop-filter:blur(12px);
+}
+.topbar-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.topbar-title{
+  font-family:var(--font-h);font-size:.95rem;font-weight:700;
+  letter-spacing:-.02em;
+}
+.topbar-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.topbar-time{
+  font-size:.72rem;color:var(--txt-3);font-weight:500;
+  padding:5px 11px;background:rgba(255,255,255,.04);
+  border:1px solid var(--border);border-radius:var(--r-sm);
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+.topbar-icon-btn{
+  width:32px;height:32px;
+  border-radius:var(--r-sm);
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--txt-3);cursor:pointer;
+  transition:all var(--tr);flex-shrink:0;
+}
+.topbar-icon-btn:hover{background:rgba(255,255,255,.08);color:var(--txt);border-color:var(--border-md)}
+.topbar-icon-btn.spinning svg{animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.menu-btn{
+  display:none;
+  width:34px;height:34px;border-radius:var(--r-sm);
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  align-items:center;justify-content:center;
+  color:var(--txt-2);cursor:pointer;flex-shrink:0;
+}
+
+/* ════════════════════════════════════════════════════
+   MAIN LAYOUT — exact copy from create-post.html
+════════════════════════════════════════════════════ */
+.main{
+  margin-left:230px;
+  padding-top:60px;
+  min-height:100vh;
+  position:relative;z-index:1;
+}
+.page{
+  max-width:1180px;
+  margin:0 auto;
+  padding:32px 28px 60px;
+  animation:fadeUp .35s ease both;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* Page header row */
+.page-head{
+  margin-bottom:28px;
+  display:flex;align-items:flex-start;justify-content:space-between;
+  flex-wrap:wrap;gap:14px;
+}
+.page-head-left h1{
+  font-family:var(--font-h);font-size:1.55rem;font-weight:800;
+  letter-spacing:-.035em;margin-bottom:4px;
+}
+.page-head-left p{font-size:.82rem;color:var(--txt-3);font-weight:300}
+
+/* ════════════════════════════════════════════════════
+   CARD — exact copy from create-post.html
+════════════════════════════════════════════════════ */
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r-lg);
+  overflow:hidden;
+  animation:fadeUp .35s ease both;
+}
+.card-head{
+  padding:16px 22px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  flex-wrap:wrap;
+}
+.card-title{
+  font-family:var(--font-h);font-size:.88rem;font-weight:700;
+  letter-spacing:-.01em;
+  display:flex;align-items:center;gap:8px;
+}
+.card-title-icon{
+  width:28px;height:28px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+}
+.card-title-icon.amber{background:var(--amber-soft);color:var(--amber);border:1px solid var(--amber-bd)}
+.card-title-icon.blue {background:var(--accent-soft);color:#60A5FA;  border:1px solid var(--accent-bd)}
+.card-title-icon.green{background:var(--green-soft); color:var(--green);border:1px solid var(--green-bd)}
+.card-title-icon.sky  {background:var(--sky-soft);   color:var(--sky);  border:1px solid var(--sky-bd)}
+.card-title-icon.red  {background:var(--red-soft);   color:var(--red);  border:1px solid var(--red-bd)}
+
+/* ════════════════════════════════════════════════════
+   BUTTONS — exact copy from create-post.html
+════════════════════════════════════════════════════ */
+.btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:9px 18px;
+  border-radius:var(--r-sm);
+  font-family:var(--font-b);font-size:.82rem;font-weight:500;
+  border:1px solid transparent;
+  cursor:pointer;transition:all var(--tr);
+  white-space:nowrap;line-height:1;
+  text-decoration:none;
+}
+.btn:disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
+.btn-primary{
+  background:var(--accent);color:#fff;
+  box-shadow:0 2px 10px rgba(37,99,235,.35);
+}
+.btn-primary:hover{background:#3B82F6;box-shadow:0 4px 18px rgba(37,99,235,.5);transform:translateY(-1px)}
+.btn-primary:active{transform:translateY(0)}
+.btn-ghost{
+  background:transparent;color:var(--txt-2);
+  border-color:var(--border-md);
+}
+.btn-ghost:hover{background:rgba(255,255,255,.04);color:var(--txt);border-color:var(--border-hi)}
+.btn-danger{background:var(--red);color:#fff;border-color:var(--red)}
+.btn-danger:hover{background:#DC2626;box-shadow:0 4px 14px rgba(239,68,68,.4);transform:translateY(-1px)}
+.btn-danger:active{transform:translateY(0)}
+.btn-sm{padding:6px 13px;font-size:.78rem}
+.btn-loading{position:relative;pointer-events:none}
+.btn-loading .btn-label{opacity:0}
+.btn-loading::after{
+  content:'';position:absolute;
+  width:13px;height:13px;
+  border:2px solid rgba(255,255,255,.3);border-top-color:#fff;
+  border-radius:50%;animation:spin .6s linear infinite;
+}
+
+/* ════════════════════════════════════════════════════
+   SEARCH + FILTER TOOLBAR
+════════════════════════════════════════════════════ */
+.toolbar{
+  padding:14px 20px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+  flex-wrap:wrap;
+}
+.search-wrap{position:relative;flex:1;min-width:180px;max-width:290px}
+.search-wrap svg{
+  position:absolute;left:11px;top:50%;transform:translateY(-50%);
+  color:var(--txt-3);pointer-events:none;
+}
+.search-input{
+  background:var(--raised);
+  border:1px solid var(--border-md);
+  border-radius:var(--r-sm);
+  padding:8px 12px 8px 33px;
+  color:var(--txt);font-size:.8rem;
+  font-family:var(--font-b);width:100%;
+  transition:border-color var(--tr),box-shadow var(--tr);
+}
+.search-input:focus{
+  outline:none;
+  border-color:rgba(37,99,235,.6);
+  box-shadow:0 0 0 3px rgba(37,99,235,.1);
+}
+.search-input::placeholder{color:var(--txt-3)}
+
+/* Sort select — matches search-input style */
+.sort-sel{
+  background:var(--raised);
+  border:1px solid var(--border-md);
+  border-radius:var(--r-sm);
+  padding:8px 12px;
+  color:var(--txt-2);font-size:.78rem;
+  font-family:var(--font-b);
+  cursor:pointer;
+  transition:border-color var(--tr);
+  min-width:160px;
+}
+.sort-sel:focus{outline:none;border-color:rgba(37,99,235,.6)}
+
+/* Count chip */
+.count-chip{
+  margin-left:auto;
+  font-size:.7rem;color:var(--txt-3);
+  background:var(--raised);padding:4px 10px;
+  border-radius:999px;border:1px solid var(--border);
+  white-space:nowrap;
+}
+
+/* ════════════════════════════════════════════════════
+   TABLE
+════════════════════════════════════════════════════ */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+
+thead th{
+  padding:11px 18px;
+  text-align:left;
+  background:var(--raised);
+  font-family:var(--font-h);
+  font-size:.67rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.08em;
+  color:var(--txt-3);
+  border-bottom:1px solid var(--border);
+  white-space:nowrap;
+  cursor:pointer;
+  user-select:none;
+  transition:color var(--tr);
+}
+thead th:hover{color:var(--txt-2)}
+thead th.sorted{color:#60A5FA}
+thead th .arr{opacity:.45;font-size:.68rem;margin-left:3px;display:inline-block;transition:opacity var(--tr)}
+thead th.sorted .arr{opacity:1}
+thead th:last-child{cursor:default;text-align:right}
+
+tbody tr{transition:background var(--tr);animation:rowIn .2s ease both}
+@keyframes rowIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:translateX(0)}}
+tbody tr:hover td{background:rgba(255,255,255,.022)}
+tbody td{
+  padding:13px 18px;
+  border-bottom:1px solid var(--border);
+  color:var(--txt-2);
+  vertical-align:middle;
+}
+tbody tr:last-child td{border-bottom:none}
+
+/* ── Cell types ─────────────────────────────────── */
+.cell-id{
+  font-family:'Courier New',monospace;font-size:.72rem;
+  background:var(--raised);border:1px solid var(--border);
+  color:var(--txt-3);padding:2px 8px;border-radius:5px;
+  display:inline-block;white-space:nowrap;
+}
+.cell-content-wrap{max-width:260px}
+.cell-content{
+  color:var(--txt);font-weight:400;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  display:block;max-width:260px;
+}
+.cell-content-sub{
+  font-size:.7rem;color:var(--txt-3);margin-top:2px;
+  display:flex;align-items:center;gap:4px;
+}
+.cell-time-main{color:var(--txt-2);font-variant-numeric:tabular-nums;font-size:.82rem}
+.cell-time-rel{font-size:.7rem;color:var(--txt-3);margin-top:2px;display:flex;align-items:center;gap:4px}
+.cell-time-rel.soon{color:var(--amber)}
+.cell-time-rel.very-soon{color:var(--red)}
+
+/* ── Badges — same as dashboard ───────────────── */
+.badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 9px;border-radius:999px;
+  font-size:.69rem;font-weight:600;letter-spacing:.02em;
+  white-space:nowrap;
+}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+.badge-pending {background:var(--amber-soft);color:var(--amber); border:1px solid var(--amber-bd)}
+.badge-img     {background:var(--sky-soft);  color:var(--sky);   border:1px solid var(--sky-bd)}
+.badge-video   {background:rgba(168,85,247,.1);color:#C084FC;    border:1px solid rgba(168,85,247,.25)}
+.badge-pdf     {background:var(--amber-soft);color:var(--amber); border:1px solid var(--amber-bd)}
+.badge-carousel{background:var(--green-soft);color:var(--green); border:1px solid var(--green-bd)}
+.badge-none    {background:var(--lift);      color:var(--txt-3); border:1px solid var(--border)}
+
+/* ── Action buttons — identical icon-btn style ── */
+.act-btns{display:flex;align-items:center;gap:5px;justify-content:flex-end}
+.act-btn{
+  width:30px;height:30px;border-radius:7px;
+  background:transparent;border:1px solid var(--border);
+  display:inline-flex;align-items:center;justify-content:center;
+  color:var(--txt-3);cursor:pointer;
+  transition:all var(--tr);
+  flex-shrink:0;
+  text-decoration:none;
+}
+.act-btn:hover          {background:rgba(255,255,255,.06);color:var(--txt);border-color:var(--border-md)}
+.act-btn.edit:hover     {background:var(--accent-soft);color:#60A5FA;border-color:var(--accent-bd)}
+.act-btn.reschedule:hover{background:var(--amber-soft);color:var(--amber);border-color:var(--amber-bd)}
+.act-btn.del:hover      {background:var(--red-soft);color:var(--red);border-color:var(--red-bd)}
+
+/* Action label tooltip */
+.act-btn-wrap{position:relative;display:inline-flex}
+.act-btn-wrap .tip{
+  position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
+  background:var(--lift);border:1px solid var(--border-md);
+  color:var(--txt-2);font-size:.65rem;font-weight:500;
+  padding:3px 8px;border-radius:5px;white-space:nowrap;
+  opacity:0;pointer-events:none;
+  transition:opacity var(--tr);
+}
+.act-btn-wrap:hover .tip{opacity:1}
+
+/* ════════════════════════════════════════════════════
+   EMPTY STATE
+════════════════════════════════════════════════════ */
+.empty{
+  padding:56px 24px;
+  text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+}
+.empty-ico{
+  width:54px;height:54px;border-radius:var(--r);
+  background:var(--raised);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--txt-3);margin-bottom:4px;
+}
+.empty-title{font-family:var(--font-h);font-size:.95rem;font-weight:700;color:var(--txt-2)}
+.empty-sub{font-size:.78rem;color:var(--txt-3);max-width:260px;line-height:1.6}
+
+/* ════════════════════════════════════════════════════
+   PAGINATION
+════════════════════════════════════════════════════ */
+.pagination{
+  padding:13px 20px;
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  gap:10px;flex-wrap:wrap;
+}
+.pg-info{font-size:.72rem;color:var(--txt-3)}
+.pg-controls{display:flex;align-items:center;gap:4px}
+.pg-btn{
+  min-width:28px;height:28px;
+  border-radius:6px;
+  border:1px solid var(--border);
+  background:transparent;color:var(--txt-3);
+  font-size:.78rem;font-family:var(--font-b);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all var(--tr);padding:0 6px;
+}
+.pg-btn:hover:not(:disabled){background:rgba(255,255,255,.05);color:var(--txt);border-color:var(--border-md)}
+.pg-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.pg-btn:disabled{opacity:.3;cursor:not-allowed}
+
+/* ════════════════════════════════════════════════════
+   SKELETON SHIMMER (for initial load)
+════════════════════════════════════════════════════ */
+.skel{
+  border-radius:6px;
+  background:linear-gradient(90deg,var(--raised) 25%,var(--lift) 50%,var(--raised) 75%);
+  background-size:200% 100%;
+  animation:shimmer 1.5s infinite;
+}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ════════════════════════════════════════════════════
+   DELETE MODAL — same as dashboard.html
+════════════════════════════════════════════════════ */
+.overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.65);
+  backdrop-filter:blur(4px);
+  z-index:198;opacity:0;pointer-events:none;
+  transition:opacity .2s ease;
+}
+.overlay.vis{opacity:1;pointer-events:all}
+
+.modal{
+  position:fixed;top:50%;left:50%;
+  transform:translate(-50%,-50%) scale(.94);
+  z-index:199;
+  background:var(--raised);
+  border:1px solid var(--border-md);
+  border-radius:var(--r-xl);
+  padding:26px;
+  width:min(440px,calc(100vw - 40px));
+  box-shadow:var(--shadow);
+  opacity:0;pointer-events:none;
+  transition:all .22s cubic-bezier(.34,1.56,.64,1);
+}
+.modal.vis{
+  opacity:1;pointer-events:all;
+  transform:translate(-50%,-50%) scale(1);
+}
+.modal-head{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+.modal-ico{
+  width:42px;height:42px;border-radius:10px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+}
+.modal-ico.danger{background:var(--red-soft);color:var(--red);border:1px solid var(--red-bd)}
+.modal-ico.amber {background:var(--amber-soft);color:var(--amber);border:1px solid var(--amber-bd)}
+.modal-title{font-family:var(--font-h);font-size:1.05rem;font-weight:700}
+.modal-body{font-size:.82rem;color:var(--txt-2);line-height:1.68;margin-bottom:22px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end}
+
+/* ════════════════════════════════════════════════════
+   RESCHEDULE MODAL — inline datetime modal
+════════════════════════════════════════════════════ */
+.modal-field{display:flex;flex-direction:column;gap:7px;margin-bottom:20px}
+.modal-label{font-size:.78rem;font-weight:600;color:var(--txt-2)}
+.modal-input{
+  background:var(--surface);
+  border:1px solid var(--border-md);
+  border-radius:var(--r-sm);
+  padding:10px 14px;
+  color:var(--txt);
+  font-size:.875rem;
+  font-family:var(--font-b);
+  width:100%;
+  transition:border-color var(--tr),box-shadow var(--tr);
+}
+.modal-input:focus{
+  outline:none;
+  border-color:rgba(37,99,235,.6);
+  box-shadow:0 0 0 3px rgba(37,99,235,.1);
+}
+input[type="datetime-local"]{color-scheme:dark}
+.modal-hint{font-size:.72rem;color:var(--txt-3)}
+.modal-input.err{border-color:var(--red)}
+
+/* ════════════════════════════════════════════════════
+   TOAST — exact copy from create-post.html
+════════════════════════════════════════════════════ */
+.toast-wrap{
+  position:fixed;bottom:24px;right:24px;
+  z-index:999;
+  display:flex;flex-direction:column;gap:10px;
+  pointer-events:none;
+}
+.toast{
+  display:flex;align-items:center;gap:10px;
+  background:var(--raised);
+  border:1px solid var(--border-md);
+  border-radius:var(--r);
+  padding:12px 16px;
+  min-width:240px;max-width:340px;
+  box-shadow:var(--shadow);
+  pointer-events:all;
+  animation:toastIn .28s cubic-bezier(.34,1.56,.64,1) both;
+}
+.toast.out{animation:toastOut .22s ease both}
+@keyframes toastIn{from{opacity:0;transform:translateX(16px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes toastOut{from{opacity:1;transform:none}to{opacity:0;transform:translateX(14px) scale(.95)}}
+.toast-ico{width:26px;height:26px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.toast-ico.ok {background:var(--green-soft);color:var(--green)}
+.toast-ico.err{background:var(--red-soft);  color:var(--red)}
+.toast-ico.inf{background:var(--accent-soft);color:#60A5FA}
+.toast-msg{flex:1;font-size:.8rem;color:var(--txt);line-height:1.4}
+.toast-x{color:var(--txt-3);font-size:14px;cursor:pointer;padding:2px;border:none;background:none;font-family:var(--font-b)}
+.toast-x:hover{color:var(--txt)}
+
+/* ════════════════════════════════════════════════════
+   RESPONSIVE
+════════════════════════════════════════════════════ */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:none;box-shadow:var(--shadow)}
+  .topbar{left:0;padding:0 16px}
+  .main{margin-left:0}
+  .menu-btn{display:flex!important}
+  .page{padding:20px 14px 48px}
+  .toolbar{gap:8px}
+  .search-wrap{max-width:100%}
+  .sort-sel{min-width:130px}
+  .count-chip{display:none}
+  .topbar-time{display:none}
+}
+@media(max-width:540px){
+  .page-head{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════
+     SIDEBAR
+════════════════════════════════════════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <div class="brand-ico">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 0 0-.07-.2c-.08-.06-.2-.04-.28-.02-.12.02-1.96 1.25-5.54 3.69-.52.36-1 .53-1.42.52-.47-.01-1.37-.26-2.03-.48-.82-.27-1.47-.42-1.42-.88.03-.25.38-.51 1.07-.78 4.18-1.82 6.97-3.02 8.38-3.61 3.98-1.66 4.81-1.95 5.35-1.96.12 0 .38.03.55.17.14.12.18.28.2.45l-.03.21z"/>
+      </svg>
+    </div>
+    <div>
+      <div class="brand-name">TG Scheduler</div>
+      <div class="brand-sub">Post Automation</div>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <div class="nav-label">Main</div>
+
+    <a class="nav-item" href="dashboard.html">
+      <span class="nav-ico">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/>
+          <rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+      </span>
+      Dashboard
+    </a>
+
+    <a class="nav-item" href="create-post.html">
+      <span class="nav-ico">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="16"/>
+          <line x1="8" y1="12" x2="16" y2="12"/>
+        </svg>
+      </span>
+      Create Post
+    </a>
+
+    <div class="nav-label">Posts</div>
+
+    <a class="nav-item active" href="scheduled.html">
+      <span class="nav-ico">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </span>
+      Scheduled Posts
+      <span class="nav-pill s" id="navScheduled">–</span>
+    </a>
+
+    <a class="nav-item" href="published.html">
+      <span class="nav-ico">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </span>
+      Published Posts
+      <span class="nav-pill g" id="navPublished">–</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-foot">
+    <div class="status-dot"></div>
+    Scheduler Active
+  </div>
+</aside>
+
+<!-- ════════════════════════════════════════════
+     TOPBAR
+════════════════════════════════════════════ -->
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="Toggle sidebar">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="3" y1="6" x2="21" y2="6"/>
+      <line x1="3" y1="12" x2="21" y2="12"/>
+      <line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+  <div class="topbar-left">
+    <div class="topbar-title">Telegram Post Scheduler</div>
+  </div>
+  <div class="topbar-right">
+    <button class="topbar-icon-btn" id="refreshBtn" title="Refresh">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="23 4 23 10 17 10"/>
+        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+      </svg>
+    </button>
+    <div class="topbar-time" id="clock">--:--:-- --</div>
+  </div>
+</header>
+
+<!-- ════════════════════════════════════════════
+     MAIN PAGE
+════════════════════════════════════════════ -->
+<main class="main">
+  <div class="page">
+
+    <!-- Page header -->
+    <div class="page-head">
+      <div class="page-head-left">
+        <h1>Scheduled Posts</h1>
+        <p>Upcoming posts waiting to be published to your Telegram channel</p>
+      </div>
+      <!-- No separate "New Post" button here per requirement -->
+    </div>
+
+    <!-- ── MAIN TABLE CARD ─────────────────── -->
+    <div class="card">
+      <!-- Card header -->
+      <div class="card-head">
+        <div class="card-title">
+          <div class="card-title-icon amber">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          Upcoming Posts
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span id="countChip" class="count-chip">loading…</span>
+          <button class="topbar-icon-btn" id="refreshBtn2" title="Refresh" style="width:30px;height:30px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="23 4 23 10 17 10"/>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Toolbar: search + sort -->
+      <div class="toolbar">
+        <div class="search-wrap">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            class="search-input"
+            id="searchInput"
+            type="text"
+            placeholder="Search by content or ID…"
+            oninput="onSearch()"
+          />
+        </div>
+
+        <select class="sort-sel" id="sortSel" onchange="onSortChange()">
+          <option value="time_asc">Soonest first</option>
+          <option value="time_desc">Latest first</option>
+          <option value="id_desc">Newest ID</option>
+          <option value="id_asc">Oldest ID</option>
+        </select>
+
+        <span id="countChipRight" class="count-chip" style="margin-left:auto">0 posts</span>
+      </div>
+
+      <!-- Table -->
+      <div class="tbl-wrap">
+        <table id="mainTable">
+          <thead>
+            <tr>
+              <th onclick="sortBy('id')"             data-col="id">            Post ID        <span class="arr">↕</span></th>
+              <th onclick="sortBy('content')"        data-col="content">       Content Preview <span class="arr">↕</span></th>
+              <th>                                                              Media Type              </th>
+              <th onclick="sortBy('scheduled_time')" data-col="scheduled_time" class="sorted"> Scheduled Time <span class="arr">↑</span></th>
+              <th>                                                              Status                  </th>
+              <th style="text-align:right;cursor:default">                     Actions                 </th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- Skeleton rows injected on load -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Empty state -->
+      <div class="empty" id="emptyState" style="display:none">
+        <div class="empty-ico">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <div class="empty-title" id="emptyTitle">No scheduled posts</div>
+        <div class="empty-sub" id="emptySub">Create a new post and it will appear here once scheduled.</div>
+        <a class="btn btn-primary btn-sm" href="create-post.html" id="emptyBtn" style="margin-top:6px">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Create Post
+        </a>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination" id="pagination" style="display:none">
+        <span class="pg-info" id="pgInfo">–</span>
+        <div class="pg-controls" id="pgControls"></div>
+      </div>
+    </div>
+
+  </div><!-- /page -->
+</main>
+
+<!-- ════════════════════════════════════════════
+     DELETE CONFIRMATION MODAL
+════════════════════════════════════════════ -->
+<div class="overlay" id="delOverlay" onclick="closeModal('del')"></div>
+<div class="modal" id="delModal">
+  <div class="modal-head">
+    <div class="modal-ico danger">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="3 6 5 6 21 6"/>
+        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+        <path d="M10 11v6M14 11v6"/>
+        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+      </svg>
+    </div>
+    <div class="modal-title">Delete Post</div>
+  </div>
+  <div class="modal-body">
+    This will permanently remove the post and all associated media files from the scheduler. This action <strong>cannot be undone</strong>.
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal('del')">Cancel</button>
+    <button class="btn btn-danger" id="delConfirmBtn" onclick="confirmDelete()">
+      <span class="btn-label">Delete Post</span>
+    </button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     RESCHEDULE MODAL
+════════════════════════════════════════════ -->
+<div class="overlay" id="rsOverlay" onclick="closeModal('rs')"></div>
+<div class="modal" id="rsModal">
+  <div class="modal-head">
+    <div class="modal-ico amber">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <polyline points="12 6 12 12 16 14"/>
+      </svg>
+    </div>
+    <div class="modal-title">Reschedule Post</div>
+  </div>
+  <div class="modal-field">
+    <label class="modal-label">New Scheduled Time</label>
+    <input
+      type="datetime-local"
+      class="modal-input"
+      id="rsDateInput"
+    />
+    <span class="modal-hint">Must be at least 1 minute in the future</span>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal('rs')">Cancel</button>
+    <button class="btn btn-primary" id="rsConfirmBtn" onclick="confirmReschedule()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+      <span class="btn-label">Confirm</span>
+    </button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     TOAST CONTAINER
+════════════════════════════════════════════ -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- ════════════════════════════════════════════
+     SCRIPT
+════════════════════════════════════════════ -->
+<script>
+/* ─────────────────────────────────────────────
+   CONFIG
+───────────────────────────────────────────── */
+const API_BASE = 'http://localhost:8000';
+
+/* ─────────────────────────────────────────────
+   STATE
+───────────────────────────────────────────── */
+let allPosts      = [];
+let filtered      = [];
+let currentPage   = 1;
+const PER_PAGE    = 10;
+let sortKey       = 'scheduled_time';
+let sortDir       = 'asc';
+let searchQ       = '';
+let pendingDelId  = null;
+let pendingRsId   = null;
+
+/* ─────────────────────────────────────────────
+   CLOCK
+───────────────────────────────────────────── */
+(function clock(){
+  const el = document.getElementById('clock');
+  const tick = () => { if(el) el.textContent = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true}); };
+  tick(); setInterval(tick, 1000);
+})();
+
+/* ─────────────────────────────────────────────
+   MOBILE SIDEBAR
+───────────────────────────────────────────── */
+document.getElementById('menuBtn').addEventListener('click', () =>
+  document.getElementById('sidebar').classList.toggle('open')
+);
+document.addEventListener('click', e => {
+  const sb = document.getElementById('sidebar');
+  if(window.innerWidth <= 768 && sb.classList.contains('open')
+    && !sb.contains(e.target) && !document.getElementById('menuBtn').contains(e.target))
+    sb.classList.remove('open');
+});
+
+/* ─────────────────────────────────────────────
+   REFRESH BUTTONS
+───────────────────────────────────────────── */
+function attachRefresh(id){
+  const btn = document.getElementById(id);
+  if(!btn) return;
+  btn.addEventListener('click', () => {
+    btn.classList.add('spinning');
+    loadData().finally(() => setTimeout(() => btn.classList.remove('spinning'), 500));
+  });
+}
+attachRefresh('refreshBtn');
+attachRefresh('refreshBtn2');
+
+/* ─────────────────────────────────────────────
+   FETCH DATA
+───────────────────────────────────────────── */
+async function loadData(){
+  showSkeletons();
+  try {
+    /* GET /posts/scheduled returns pending + future posts */
+    const [sRes, pubRes] = await Promise.all([
+      fetch(`${API_BASE}/posts/scheduled`),
+      fetch(`${API_BASE}/posts/published`),
+    ]);
+    allPosts = sRes.ok ? await sRes.json() : [];
+    if(!Array.isArray(allPosts)) allPosts = [];
+
+    /* update nav pills */
+    document.getElementById('navScheduled').textContent = allPosts.length;
+    if(pubRes.ok){
+      const pub = await pubRes.json();
+      document.getElementById('navPublished').textContent = Array.isArray(pub) ? pub.length : 0;
+    }
+
+    applyAndRender();
+  } catch(err){
+    console.error(err);
+    allPosts = [];
+    applyAndRender();
+    showToast('Could not reach the server.','err');
+  }
+}
+
+/* ─────────────────────────────────────────────
+   SEARCH / SORT / RENDER
+───────────────────────────────────────────── */
+function onSearch(){
+  searchQ = document.getElementById('searchInput').value.trim().toLowerCase();
+  currentPage = 1;
+  applyAndRender();
+}
+
+function onSortChange(){
+  const v = document.getElementById('sortSel').value;
+  const map = {
+    time_asc:  ['scheduled_time','asc'],
+    time_desc: ['scheduled_time','desc'],
+    id_asc:    ['id','asc'],
+    id_desc:   ['id','desc'],
+  };
+  [sortKey, sortDir] = map[v] || ['scheduled_time','asc'];
+  currentPage = 1;
+  applyAndRender();
+}
+
+function sortBy(col){
+  if(sortKey === col) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  else { sortKey = col; sortDir = 'asc'; }
+  /* sync dropdown */
+  const sel = document.getElementById('sortSel');
+  if(col === 'scheduled_time') sel.value = sortDir === 'asc' ? 'time_asc' : 'time_desc';
+  /* update header arrows */
+  document.querySelectorAll('thead th[data-col]').forEach(th => {
+    th.classList.remove('sorted');
+    th.querySelector('.arr').textContent = '↕';
+  });
+  const active = document.querySelector(`thead th[data-col="${col}"]`);
+  if(active){ active.classList.add('sorted'); active.querySelector('.arr').textContent = sortDir==='asc'?'↑':'↓'; }
+  currentPage = 1;
+  applyAndRender();
+}
+
+function applyAndRender(){
+  /* filter */
+  filtered = allPosts.filter(p => {
+    if(!searchQ) return true;
+    return (p.content||'').toLowerCase().includes(searchQ) || String(p.id).includes(searchQ);
+  });
+  /* sort */
+  filtered.sort((a,b) => {
+    let va = a[sortKey], vb = b[sortKey];
+    if(typeof va === 'string') va = va.toLowerCase();
+    if(typeof vb === 'string') vb = vb.toLowerCase();
+    if(va < vb) return sortDir==='asc'?-1:1;
+    if(va > vb) return sortDir==='asc'?1:-1;
+    return 0;
+  });
+  /* update count chips */
+  const chip1 = document.getElementById('countChip');
+  const chip2 = document.getElementById('countChipRight');
+  const txt   = `${filtered.length} post${filtered.length!==1?'s':''}`;
+  chip1.textContent = txt;
+  chip2.textContent = txt;
+  renderTable();
+}
+
+/* ─────────────────────────────────────────────
+   RENDER TABLE
+───────────────────────────────────────────── */
+function renderTable(){
+  const tbody = document.getElementById('tableBody');
+  const empty = document.getElementById('emptyState');
+  const pgBar = document.getElementById('pagination');
+
+  if(!filtered.length){
+    tbody.innerHTML = '';
+    empty.style.display = 'flex';
+    pgBar.style.display  = 'none';
+    /* tweak empty state message */
+    document.getElementById('emptyTitle').textContent = searchQ ? 'No matching posts' : 'No scheduled posts';
+    document.getElementById('emptySub').textContent   = searchQ
+      ? 'Try a different search term.'
+      : 'Create a new post and it will appear here once scheduled.';
+    document.getElementById('emptyBtn').style.display = searchQ ? 'none' : 'inline-flex';
+    return;
+  }
+
+  empty.style.display = 'none';
+
+  /* paginate */
+  const total = filtered.length;
+  const pages = Math.ceil(total / PER_PAGE);
+  if(currentPage > pages) currentPage = pages;
+  const start = (currentPage - 1) * PER_PAGE;
+  const items = filtered.slice(start, start + PER_PAGE);
+
+  tbody.innerHTML = items.map((p, idx) => {
+    const delay = (idx * 0.03).toFixed(2);
+    const diff  = new Date(p.scheduled_time) - new Date();
+    const soon  = diff < 3600000;  /* < 1 hour */
+    const verySoon = diff < 600000; /* < 10 min */
+    const relCls= verySoon ? 'very-soon' : soon ? 'soon' : '';
+
+    return `
+    <tr style="animation-delay:${delay}s">
+      <td><span class="cell-id">#${escHtml(String(p.id))}</span></td>
+      <td>
+        <div class="cell-content-wrap">
+          <span class="cell-content" title="${escHtml(p.content||'')}">${escHtml(trunc(p.content||'—', 60))}</span>
+          <div class="cell-content-sub">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            </svg>
+            ${escHtml(trunc(p.content||'', 40))}
+          </div>
+        </div>
+      </td>
+      <td>${mediaBadge(p.media_type)}</td>
+      <td>
+        <div class="cell-time-main">${fmtDate(p.scheduled_time)}</div>
+        <div class="cell-time-rel ${relCls}">
+          ${relCls === 'very-soon' ? `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>` : ''}
+          ${relTime(p.scheduled_time)}
+        </div>
+      </td>
+      <td><span class="badge badge-pending">Pending</span></td>
+      <td>
+        <div class="act-btns">
+          <!-- Edit -->
+          <div class="act-btn-wrap">
+            <a class="act-btn edit" href="edit-post.html?id=${p.id}" title="Edit post">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </a>
+            <span class="tip">Edit</span>
+          </div>
+          <!-- Reschedule -->
+          <div class="act-btn-wrap">
+            <button class="act-btn reschedule" onclick="openReschedule(${p.id},'${p.scheduled_time}')" title="Reschedule">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </button>
+            <span class="tip">Reschedule</span>
+          </div>
+          <!-- Delete -->
+          <div class="act-btn-wrap">
+            <button class="act-btn del" onclick="openDelete(${p.id})" title="Delete post">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                <path d="M10 11v6M14 11v6"/>
+              </svg>
+            </button>
+            <span class="tip">Delete</span>
+          </div>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  /* pagination */
+  if(pages <= 1){
+    pgBar.style.display = 'none';
+  } else {
+    pgBar.style.display = 'flex';
+    buildPagination(total, pages);
+  }
+}
+
+/* ─────────────────────────────────────────────
+   SKELETON ROWS (initial load placeholder)
+───────────────────────────────────────────── */
+function showSkeletons(){
+  const rows = Array.from({length:6}, () => `
+    <tr>
+      <td><div class="skel" style="width:52px;height:20px"></div></td>
+      <td><div class="skel" style="width:200px;height:14px;margin-bottom:6px"></div><div class="skel" style="width:140px;height:11px"></div></td>
+      <td><div class="skel" style="width:60px;height:20px;border-radius:999px"></div></td>
+      <td><div class="skel" style="width:130px;height:14px;margin-bottom:6px"></div><div class="skel" style="width:70px;height:11px"></div></td>
+      <td><div class="skel" style="width:64px;height:20px;border-radius:999px"></div></td>
+      <td><div style="display:flex;justify-content:flex-end;gap:5px">
+        <div class="skel" style="width:30px;height:30px;border-radius:7px"></div>
+        <div class="skel" style="width:30px;height:30px;border-radius:7px"></div>
+        <div class="skel" style="width:30px;height:30px;border-radius:7px"></div>
+      </div></td>
+    </tr>`).join('');
+  document.getElementById('tableBody').innerHTML = rows;
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('pagination').style.display  = 'none';
+}
+
+/* ─────────────────────────────────────────────
+   PAGINATION
+───────────────────────────────────────────── */
+function buildPagination(total, pages){
+  const start = (currentPage - 1) * PER_PAGE + 1;
+  const end   = Math.min(currentPage * PER_PAGE, total);
+  document.getElementById('pgInfo').textContent = `Showing ${start}–${end} of ${total}`;
+
+  const ctrl  = document.getElementById('pgControls');
+  const range = pageRange(currentPage, pages);
+  let html = `<button class="pg-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
+  range.forEach(p => {
+    if(p === '…') html += `<span style="color:var(--txt-3);padding:0 4px;font-size:.8rem">…</span>`;
+    else html += `<button class="pg-btn ${p===currentPage?'active':''}" onclick="goPage(${p})">${p}</button>`;
+  });
+  html += `<button class="pg-btn" onclick="goPage(${currentPage+1})" ${currentPage===pages?'disabled':''}>›</button>`;
+  ctrl.innerHTML = html;
+}
+function goPage(p){
+  const pages = Math.ceil(filtered.length / PER_PAGE);
+  if(p < 1 || p > pages) return;
+  currentPage = p;
+  renderTable();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function pageRange(cur, total){
+  if(total <= 7) return Array.from({length:total},(_,i)=>i+1);
+  const pages = [1];
+  if(cur > 3) pages.push('…');
+  for(let i=Math.max(2,cur-1);i<=Math.min(total-1,cur+1);i++) pages.push(i);
+  if(cur < total-2) pages.push('…');
+  pages.push(total);
+  return pages;
+}
+
+/* ─────────────────────────────────────────────
+   DELETE FLOW
+───────────────────────────────────────────── */
+function openDelete(id){
+  pendingDelId = id;
+  document.getElementById('delOverlay').classList.add('vis');
+  document.getElementById('delModal').classList.add('vis');
+}
+async function confirmDelete(){
+  if(!pendingDelId) return;
+  const btn = document.getElementById('delConfirmBtn');
+  btn.classList.add('btn-loading'); btn.disabled = true;
+  try {
+    const res = await fetch(`${API_BASE}/delete-post/${pendingDelId}`, {method:'DELETE'});
+    if(!res.ok) throw new Error(`Delete failed (${res.status})`);
+    showToast('Post deleted successfully.','ok');
+    closeModal('del');
+    await loadData();
+  } catch(err){
+    showToast(err.message || 'Failed to delete post.','err');
+    btn.classList.remove('btn-loading'); btn.disabled = false;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   RESCHEDULE FLOW
+───────────────────────────────────────────── */
+function openReschedule(id, currentTime){
+  pendingRsId = id;
+  const input = document.getElementById('rsDateInput');
+  /* pre-fill with existing time */
+  if(currentTime){
+    const d   = new Date(currentTime);
+    const pad = n => String(n).padStart(2,'0');
+    input.value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  } else {
+    input.value = '';
+  }
+  /* set min to 1 min from now */
+  const now = new Date(Date.now() + 60000);
+  const pad = n => String(n).padStart(2,'0');
+  input.min = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  input.classList.remove('err');
+
+  document.getElementById('rsOverlay').classList.add('vis');
+  document.getElementById('rsModal').classList.add('vis');
+  setTimeout(() => input.focus(), 120);
+}
+async function confirmReschedule(){
+  const input = document.getElementById('rsDateInput');
+  const val   = input.value;
+  if(!val){ input.classList.add('err'); return; }
+  if(new Date(val) <= new Date()){ input.classList.add('err'); showToast('Please choose a future time.','err'); return; }
+  input.classList.remove('err');
+
+  const btn = document.getElementById('rsConfirmBtn');
+  btn.classList.add('btn-loading'); btn.disabled = true;
+  try {
+    const iso = new Date(val).toISOString();
+    const res = await fetch(`${API_BASE}/${pendingRsId}?scheduled_time=${encodeURIComponent(iso)}`, {method:'PUT'});
+    if(!res.ok) throw new Error(`Reschedule failed (${res.status})`);
+    showToast('Post rescheduled successfully! ⏰','ok');
+    closeModal('rs');
+    await loadData();
+  } catch(err){
+    showToast(err.message || 'Failed to reschedule post.','err');
+    btn.classList.remove('btn-loading'); btn.disabled = false;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   MODAL CLOSE
+───────────────────────────────────────────── */
+function closeModal(which){
+  if(which === 'del'){
+    document.getElementById('delOverlay').classList.remove('vis');
+    document.getElementById('delModal').classList.remove('vis');
+    document.getElementById('delConfirmBtn').classList.remove('btn-loading');
+    document.getElementById('delConfirmBtn').disabled = false;
+    pendingDelId = null;
+  } else {
+    document.getElementById('rsOverlay').classList.remove('vis');
+    document.getElementById('rsModal').classList.remove('vis');
+    document.getElementById('rsConfirmBtn').classList.remove('btn-loading');
+    document.getElementById('rsConfirmBtn').disabled = false;
+    pendingRsId = null;
+  }
+}
+/* ESC to close any open modal */
+document.addEventListener('keydown', e => {
+  if(e.key !== 'Escape') return;
+  if(document.getElementById('delModal').classList.contains('vis')) closeModal('del');
+  if(document.getElementById('rsModal').classList.contains('vis'))  closeModal('rs');
+});
+
+/* ─────────────────────────────────────────────
+   TOAST
+───────────────────────────────────────────── */
+function showToast(msg, type='inf'){
+  const wrap = document.getElementById('toastWrap');
+  const t    = document.createElement('div');
+  t.className = 'toast';
+  const icons = {
+    ok:  `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`,
+    err: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+    inf: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+  };
+  t.innerHTML = `
+    <div class="toast-ico ${type}">${icons[type]||icons.inf}</div>
+    <span class="toast-msg">${msg}</span>
+    <button class="toast-x" onclick="dismissToast(this.parentElement)">✕</button>`;
+  wrap.appendChild(t);
+  const timer = setTimeout(() => dismissToast(t), type==='err' ? 5000 : 3500);
+  t._timer = timer;
+}
+function dismissToast(el){
+  clearTimeout(el._timer);
+  el.classList.add('out');
+  el.addEventListener('animationend', () => el.remove(), {once:true});
+}
+
+/* ─────────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────────── */
+function trunc(s, n){ return s.length > n ? s.slice(0, n) + '…' : s }
+function escHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+function fmtDate(iso){
+  if(!iso) return '—';
+  try {
+    return new Date(iso).toLocaleString('en-US',{
+      month:'short', day:'numeric', year:'numeric',
+      hour:'2-digit', minute:'2-digit', hour12:true
+    });
+  } catch { return iso }
+}
+function relTime(iso){
+  if(!iso) return '—';
+  const diff = new Date(iso) - new Date();
+  const abs  = Math.abs(diff);
+  const mins = Math.floor(abs/60000);
+  const hrs  = Math.floor(abs/3600000);
+  const days = Math.floor(abs/86400000);
+  if(diff <= 0) return 'Overdue';
+  if(mins < 1)  return 'Imminent';
+  if(mins < 60) return `in ${mins}m`;
+  if(hrs  < 24) return `in ${hrs}h ${mins%60}m`;
+  return `in ${days}d`;
+}
+function mediaBadge(t){
+  const m = {
+    none:     ['badge-none',    'Text only'],
+    image:    ['badge-img',     'Image'],
+    video:    ['badge-video',   'Video'],
+    pdf:      ['badge-pdf',     'PDF'],
+    carousel: ['badge-carousel','Carousel'],
+  };
+  const [cls, label] = m[t] || m.none;
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+/* ─────────────────────────────────────────────
+   BOOT
+───────────────────────────────────────────── */
+loadData();
+/* Auto-refresh every 60 seconds */
+setInterval(loadData, 60000);
+</script>
+</body>
+</html>

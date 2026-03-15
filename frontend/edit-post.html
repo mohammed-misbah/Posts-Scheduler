@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Edit Post — Telegram Post Scheduler</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&display=swap" rel="stylesheet"/>
+<style>
+/* ════════════════════════════════════════════════════
+   RESET & ROOT — identical tokens to create-post.html
+════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:          #070B14;
+  --surface:     #0D1220;
+  --raised:      #121929;
+  --lift:        #18223A;
+  --border:      rgba(255,255,255,.07);
+  --border-md:   rgba(255,255,255,.12);
+  --border-hi:   rgba(255,255,255,.2);
+  --accent:      #2563EB;
+  --accent-glow: rgba(37,99,235,.35);
+  --accent-soft: rgba(37,99,235,.12);
+  --accent-bd:   rgba(37,99,235,.28);
+  --sky:         #0EA5E9;
+  --sky-soft:    rgba(14,165,233,.12);
+  --sky-bd:      rgba(14,165,233,.28);
+  --green:       #10B981;
+  --green-soft:  rgba(16,185,129,.12);
+  --green-bd:    rgba(16,185,129,.28);
+  --amber:       #F59E0B;
+  --amber-soft:  rgba(245,158,11,.1);
+  --amber-bd:    rgba(245,158,11,.25);
+  --red:         #EF4444;
+  --red-soft:    rgba(239,68,68,.12);
+  --red-bd:      rgba(239,68,68,.28);
+  --txt:         #F1F5F9;
+  --txt-2:       #94A3B8;
+  --txt-3:       #4A5568;
+  --font-h:      'Syne',sans-serif;
+  --font-b:      'DM Sans',sans-serif;
+  --r-sm:        8px;
+  --r:           12px;
+  --r-lg:        18px;
+  --r-xl:        24px;
+  --shadow:      0 8px 32px rgba(0,0,0,.55);
+  --shadow-sm:   0 2px 10px rgba(0,0,0,.4);
+  --tr:          .18s ease;
+}
+
+html{font-size:14px;-webkit-font-smoothing:antialiased}
+body{
+  font-family:var(--font-b);
+  background:var(--bg);
+  color:var(--txt);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ambient background — same as all pages */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 70% 55% at 15% -5%,  rgba(37,99,235,.09) 0%,transparent 60%),
+    radial-gradient(ellipse 50% 40% at 90% 105%, rgba(14,165,233,.06) 0%,transparent 55%);
+  pointer-events:none;z-index:0;
+}
+
+/* ════════════════════════════════════════════════════
+   SIDEBAR — exact copy from create-post.html
+════════════════════════════════════════════════════ */
+.sidebar{
+  position:fixed;left:0;top:0;bottom:0;width:230px;
+  background:var(--surface);border-right:1px solid var(--border);
+  z-index:50;display:flex;flex-direction:column;
+  transition:transform .3s ease;
+}
+.brand{
+  display:flex;align-items:center;gap:10px;
+  padding:20px 18px;border-bottom:1px solid var(--border);min-height:60px;
+}
+.brand-ico{
+  width:36px;height:36px;flex-shrink:0;
+  background:linear-gradient(135deg,#2563EB,#0EA5E9);
+  border-radius:10px;display:flex;align-items:center;justify-content:center;
+  color:#fff;box-shadow:0 4px 14px rgba(37,99,235,.4);
+}
+.brand-name{font-family:var(--font-h);font-size:.9rem;font-weight:700;letter-spacing:-.02em}
+.brand-sub{font-size:.65rem;color:var(--txt-3);margin-top:1px}
+
+.nav{flex:1;padding:14px 10px;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+.nav-label{font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--txt-3);padding:14px 8px 6px}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 10px;border-radius:var(--r-sm);
+  color:var(--txt-2);font-size:.82rem;font-weight:400;
+  cursor:pointer;transition:all var(--tr);
+  text-decoration:none;position:relative;user-select:none;
+}
+.nav-item:hover{background:rgba(255,255,255,.04);color:var(--txt)}
+.nav-item.active{background:var(--accent-soft);color:#60A5FA;font-weight:500}
+.nav-item.active::before{
+  content:'';position:absolute;left:0;top:20%;bottom:20%;
+  width:3px;background:var(--accent);border-radius:0 4px 4px 0;
+}
+.nav-ico{width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:.8}
+.nav-item.active .nav-ico,.nav-item:hover .nav-ico{opacity:1}
+.nav-pill{
+  margin-left:auto;background:var(--lift);border:1px solid var(--border);
+  color:var(--txt-3);font-size:.62rem;font-weight:600;
+  padding:2px 7px;border-radius:999px;min-width:22px;text-align:center;
+  transition:all var(--tr);
+}
+.nav-pill.s{background:var(--accent-soft);color:#60A5FA;border-color:var(--accent-bd)}
+.nav-pill.g{background:var(--green-soft);color:var(--green);border-color:var(--green-bd)}
+
+.sidebar-foot{
+  padding:14px 18px;border-top:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;font-size:.72rem;color:var(--txt-3);
+}
+.status-dot{
+  width:7px;height:7px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 8px var(--green);animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 8px var(--green)}50%{opacity:.5;box-shadow:0 0 14px var(--green)}}
+
+/* ════════════════════════════════════════════════════
+   TOPBAR — exact copy from create-post.html
+════════════════════════════════════════════════════ */
+.topbar{
+  position:fixed;top:0;left:230px;right:0;height:60px;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 28px;
+  gap:14px;z-index:40;backdrop-filter:blur(12px);
+}
+.topbar-title{font-family:var(--font-h);font-size:.95rem;font-weight:700;letter-spacing:-.02em;flex:1}
+.topbar-time{
+  font-size:.72rem;color:var(--txt-3);font-weight:500;
+  padding:5px 11px;background:rgba(255,255,255,.04);
+  border:1px solid var(--border);border-radius:var(--r-sm);font-variant-numeric:tabular-nums;
+}
+.menu-btn{
+  display:none;width:34px;height:34px;border-radius:var(--r-sm);
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  align-items:center;justify-content:center;color:var(--txt-2);cursor:pointer;
+}
+
+/* ════════════════════════════════════════════════════
+   MAIN — exact copy from create-post.html
+════════════════════════════════════════════════════ */
+.main{margin-left:230px;padding-top:60px;min-height:100vh;position:relative;z-index:1}
+.page{
+  max-width:1180px;margin:0 auto;
+  padding:32px 28px 60px;
+  animation:fadeUp .35s ease both;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+.page-head{margin-bottom:28px}
+.page-head-row{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:4px}
+.page-head h1{
+  font-family:var(--font-h);font-size:1.55rem;font-weight:800;
+  letter-spacing:-.035em;
+}
+.page-head p{font-size:.82rem;color:var(--txt-3);font-weight:300;margin-top:4px}
+
+/* ── Back link ── */
+.back-link{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:.78rem;color:var(--txt-3);font-weight:500;
+  text-decoration:none;
+  padding:5px 10px;border-radius:var(--r-sm);
+  border:1px solid var(--border);background:transparent;
+  transition:all var(--tr);cursor:pointer;
+  flex-shrink:0;margin-top:4px;
+}
+.back-link:hover{background:rgba(255,255,255,.04);color:var(--txt-2);border-color:var(--border-md)}
+
+/* ── Post meta pill ── */
+.post-meta-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:.7rem;color:var(--txt-3);
+  background:var(--raised);padding:4px 11px;
+  border-radius:999px;border:1px solid var(--border);
+  white-space:nowrap;
+}
+.post-meta-pill .dot{width:5px;height:5px;border-radius:50%;background:var(--amber);display:inline-block;flex-shrink:0}
+
+/* ════════════════════════════════════════════════════
+   LAYOUT GRID — same as create-post.html
+════════════════════════════════════════════════════ */
+.grid{display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start}
+
+/* ════════════════════════════════════════════════════
+   CARD — exact copy from create-post.html
+════════════════════════════════════════════════════ */
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);overflow:hidden;
+}
+.card-head{
+  padding:16px 22px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  flex-wrap:wrap;
+}
+.card-title{
+  font-family:var(--font-h);font-size:.88rem;font-weight:700;
+  letter-spacing:-.01em;display:flex;align-items:center;gap:8px;
+}
+.card-title-icon{
+  width:28px;height:28px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+}
+.card-title-icon.blue {background:var(--accent-soft);color:#60A5FA; border:1px solid var(--accent-bd)}
+.card-title-icon.sky  {background:var(--sky-soft);   color:var(--sky);border:1px solid var(--sky-bd)}
+.card-title-icon.amber{background:var(--amber-soft); color:var(--amber);border:1px solid var(--amber-bd)}
+.card-title-icon.green{background:var(--green-soft); color:var(--green);border:1px solid var(--green-bd)}
+.card-title-icon.red  {background:var(--red-soft);   color:var(--red);  border:1px solid var(--red-bd)}
+.card-body{padding:22px}
+
+/* ════════════════════════════════════════════════════
+   FORM — exact copy from create-post.html
+════════════════════════════════════════════════════ */
+.form{display:flex;flex-direction:column;gap:18px}
+.fg{display:flex;flex-direction:column;gap:7px}
+.label{font-size:.78rem;font-weight:600;color:var(--txt-2);letter-spacing:.01em;display:flex;align-items:center;gap:5px}
+.label .req{color:var(--red);font-size:.85em}
+
+.input,.textarea{
+  background:var(--raised);border:1px solid var(--border-md);
+  border-radius:var(--r-sm);padding:10px 14px;
+  color:var(--txt);font-size:.875rem;font-family:var(--font-b);width:100%;
+  transition:border-color var(--tr),box-shadow var(--tr);
+}
+.input:focus,.textarea:focus{
+  outline:none;border-color:rgba(37,99,235,.6);box-shadow:0 0 0 3px rgba(37,99,235,.1);
+}
+.input::placeholder,.textarea::placeholder{color:var(--txt-3)}
+.textarea{resize:vertical;min-height:130px;line-height:1.65}
+
+/* Disabled / locked input */
+.input-locked{
+  background:rgba(255,255,255,.025);
+  border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:10px 14px;
+  color:var(--txt-3);font-size:.875rem;font-family:var(--font-b);
+  width:100%;cursor:not-allowed;
+  user-select:none;
+}
+
+.hint{font-size:.72rem;color:var(--txt-3)}
+.err-msg{font-size:.72rem;color:var(--red);display:none}
+.fg.invalid .textarea,.fg.invalid .input{border-color:var(--red)}
+.fg.invalid .err-msg{display:block}
+.fg.invalid .hint{display:none}
+
+/* Char counter */
+.char-row{display:flex;justify-content:space-between;align-items:center}
+.char-count{font-size:.7rem;color:var(--txt-3);font-variant-numeric:tabular-nums}
+.char-count.warn{color:var(--amber)}
+.char-count.over{color:var(--red)}
+
+/* ════════════════════════════════════════════════════
+   MEDIA TABS — exact copy from create-post.html
+════════════════════════════════════════════════════ */
+.media-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.m-tab{
+  padding:5px 13px;border-radius:999px;border:1px solid var(--border-md);
+  background:transparent;color:var(--txt-2);
+  font-size:.75rem;font-weight:500;cursor:pointer;font-family:var(--font-b);
+  transition:all var(--tr);display:flex;align-items:center;gap:5px;
+}
+.m-tab:hover{border-color:var(--border-hi);color:var(--txt)}
+.m-tab.active{background:var(--accent-soft);border-color:var(--accent-bd);color:#60A5FA}
+
+/* ════════════════════════════════════════════════════
+   CURRENT MEDIA DISPLAY — shown before any new upload
+════════════════════════════════════════════════════ */
+.current-media-box{
+  display:flex;align-items:center;gap:12px;
+  padding:13px 16px;
+  background:var(--raised);border:1px solid var(--border);
+  border-radius:var(--r);margin-bottom:14px;
+}
+.current-media-thumb{
+  width:52px;height:52px;border-radius:var(--r-sm);
+  background:var(--lift);border:1px solid var(--border);
+  flex-shrink:0;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.4rem;
+}
+.current-media-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.current-media-info{flex:1;min-width:0}
+.current-media-label{font-size:.75rem;font-weight:600;color:var(--txt-2);margin-bottom:2px}
+.current-media-sub{font-size:.7rem;color:var(--txt-3)}
+.replace-note{
+  font-size:.68rem;color:var(--txt-3);
+  background:var(--lift);padding:3px 9px;border-radius:999px;
+  border:1px solid var(--border);white-space:nowrap;flex-shrink:0;
+}
+
+/* ════════════════════════════════════════════════════
+   UPLOAD ZONE — exact copy from create-post.html
+════════════════════════════════════════════════════ */
+.upload-wrap{margin-top:4px}
+.upload-zone{
+  border:2px dashed var(--border-md);border-radius:var(--r);
+  padding:26px 20px;text-align:center;cursor:pointer;
+  background:var(--raised);position:relative;transition:all var(--tr);
+}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:var(--accent-soft)}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-icon{
+  width:44px;height:44px;margin:0 auto 10px;
+  background:var(--lift);border-radius:var(--r-sm);
+  display:flex;align-items:center;justify-content:center;color:var(--txt-3);
+}
+.upload-zone:hover .upload-icon,.upload-zone.drag .upload-icon{background:var(--accent-soft);color:#60A5FA}
+.upload-title{font-size:.85rem;font-weight:500;color:var(--txt-2);margin-bottom:3px}
+.upload-sub{font-size:.72rem;color:var(--txt-3)}
+
+/* Preview grid — exact copy from create-post.html */
+.preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:10px;margin-top:12px}
+.prev-item{
+  position:relative;aspect-ratio:1;border-radius:var(--r-sm);
+  overflow:hidden;border:1px solid var(--border);background:var(--raised);
+  animation:popIn .2s ease both;
+}
+@keyframes popIn{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
+.prev-item img{width:100%;height:100%;object-fit:cover;display:block}
+.prev-item .prev-overlay{
+  position:absolute;inset:0;background:rgba(0,0,0,.45);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;opacity:0;transition:opacity var(--tr);
+}
+.prev-item:hover .prev-overlay{opacity:1}
+.prev-del{
+  width:24px;height:24px;border-radius:50%;background:var(--red);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;border:none;font-size:13px;font-family:var(--font-b);transition:transform var(--tr);
+}
+.prev-del:hover{transform:scale(1.15)}
+.prev-name{font-size:.6rem;color:rgba(255,255,255,.8);text-align:center;max-width:76px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prev-file{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:8px}
+.prev-file-icon{font-size:22px}
+.prev-file-name{font-size:.6rem;color:var(--txt-2);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%}
+.prev-file-size{font-size:.58rem;color:var(--txt-3)}
+
+.order-hint{margin-top:8px;font-size:.72rem;color:var(--txt-3);display:flex;align-items:center;gap:5px}
+
+/* ════════════════════════════════════════════════════
+   LOCKED SCHEDULE BOX
+════════════════════════════════════════════════════ */
+.locked-box{
+  display:flex;align-items:flex-start;gap:12px;
+  background:var(--accent-soft);border:1px solid var(--accent-bd);
+  border-radius:var(--r);padding:14px 16px;
+}
+.locked-box-icon{
+  width:34px;height:34px;border-radius:var(--r-sm);flex-shrink:0;
+  background:rgba(37,99,235,.18);
+  display:flex;align-items:center;justify-content:center;color:#60A5FA;
+}
+.locked-box-content{}
+.locked-box-label{font-size:.75rem;font-weight:600;color:#60A5FA;margin-bottom:3px}
+.locked-box-value{font-size:.88rem;font-weight:500;color:var(--txt);margin-bottom:4px}
+.locked-box-hint{font-size:.7rem;color:var(--txt-3);line-height:1.5}
+.locked-box-link{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:.72rem;color:#60A5FA;font-weight:500;
+  text-decoration:none;cursor:pointer;background:none;border:none;
+  font-family:var(--font-b);margin-top:6px;padding:0;
+  transition:opacity var(--tr);
+}
+.locked-box-link:hover{opacity:.75}
+
+/* ════════════════════════════════════════════════════
+   ACTIONS ROW — exact copy from create-post.html
+════════════════════════════════════════════════════ */
+.actions{display:flex;gap:12px;justify-content:flex-end;padding-top:4px}
+.btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:10px 20px;border-radius:var(--r-sm);
+  font-family:var(--font-b);font-size:.85rem;font-weight:500;
+  border:1px solid transparent;cursor:pointer;transition:all var(--tr);
+  white-space:nowrap;line-height:1;text-decoration:none;
+}
+.btn:disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
+.btn-ghost{background:transparent;color:var(--txt-2);border-color:var(--border-md)}
+.btn-ghost:hover{background:rgba(255,255,255,.04);color:var(--txt);border-color:var(--border-hi)}
+.btn-primary{background:var(--accent);color:#fff;box-shadow:0 2px 10px rgba(37,99,235,.35)}
+.btn-primary:hover{background:#3B82F6;box-shadow:0 4px 18px rgba(37,99,235,.5);transform:translateY(-1px)}
+.btn-primary:active{transform:translateY(0)}
+.btn-primary.loading{position:relative;pointer-events:none}
+.btn-primary.loading .btn-label{opacity:0}
+.btn-primary.loading::after{
+  content:'';position:absolute;width:14px;height:14px;
+  border:2px solid rgba(255,255,255,.3);border-top-color:#fff;
+  border-radius:50%;animation:spin .6s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.btn-sm{padding:7px 14px;font-size:.8rem}
+
+/* ════════════════════════════════════════════════════
+   SIDEBAR PREVIEW — exact copy from create-post.html
+════════════════════════════════════════════════════ */
+.preview-sidebar{position:sticky;top:calc(60px + 32px);display:flex;flex-direction:column;gap:16px}
+
+.tg-preview{background:var(--raised);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden}
+.tg-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.tg-avatar{
+  width:36px;height:36px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,#2563EB,#0EA5E9);
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-family:var(--font-h);font-size:.78rem;font-weight:700;
+}
+.tg-chname{font-size:.82rem;font-weight:600}
+.tg-sub{font-size:.67rem;color:var(--txt-3)}
+.tg-media{
+  margin:0 16px 0;border-radius:var(--r-sm);overflow:hidden;
+  max-height:150px;background:var(--lift);
+  display:none;align-items:center;justify-content:center;
+}
+.tg-media.visible{display:flex}
+.tg-media img{width:100%;height:150px;object-fit:cover}
+.tg-media-placeholder{display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--txt-3);font-size:.75rem;padding:22px}
+.tg-body{padding:14px 16px;min-height:66px}
+.tg-text{font-size:.85rem;color:var(--txt-2);line-height:1.65;white-space:pre-wrap;word-break:break-word}
+.tg-placeholder{color:var(--txt-3);font-style:italic;font-size:.8rem}
+.tg-footer{padding:8px 16px 14px;font-size:.68rem;color:var(--txt-3);display:flex;align-items:center;gap:5px}
+
+/* Right sidebar info card */
+.info-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden}
+.info-card-head{
+  padding:12px 16px;border-bottom:1px solid var(--border);
+  font-family:var(--font-h);font-size:.82rem;font-weight:700;
+  display:flex;align-items:center;gap:7px;
+}
+.info-rows{padding:4px 0}
+.info-row{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  padding:10px 16px;border-bottom:1px solid var(--border);
+}
+.info-row:last-child{border-bottom:none}
+.info-key{font-size:.72rem;color:var(--txt-3);font-weight:500;white-space:nowrap;padding-top:1px}
+.info-val{font-size:.78rem;color:var(--txt-2);text-align:right;word-break:break-word}
+.info-val.mono{font-family:'Courier New',monospace;font-size:.72rem;color:var(--txt-3)}
+
+/* Change indicator chip */
+.change-chip{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:.65rem;color:var(--amber);font-weight:600;
+  background:var(--amber-soft);border:1px solid var(--amber-bd);
+  padding:2px 7px;border-radius:999px;
+}
+
+/* Badge */
+.badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 9px;border-radius:999px;
+  font-size:.69rem;font-weight:600;letter-spacing:.02em;white-space:nowrap;
+}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+.badge-pending{background:var(--amber-soft);color:var(--amber);border:1px solid var(--amber-bd)}
+.badge-img    {background:var(--sky-soft);  color:var(--sky);  border:1px solid var(--sky-bd)}
+.badge-video  {background:rgba(168,85,247,.1);color:#C084FC;   border:1px solid rgba(168,85,247,.25)}
+.badge-pdf    {background:var(--amber-soft);color:var(--amber);border:1px solid var(--amber-bd)}
+.badge-carousel{background:var(--green-soft);color:var(--green);border:1px solid var(--green-bd)}
+.badge-none   {background:var(--lift);      color:var(--txt-3);border:1px solid var(--border)}
+
+/* ════════════════════════════════════════════════════
+   TOAST — exact copy from create-post.html
+════════════════════════════════════════════════════ */
+.toast-wrap{
+  position:fixed;bottom:24px;right:24px;z-index:999;
+  display:flex;flex-direction:column;gap:10px;pointer-events:none;
+}
+.toast{
+  display:flex;align-items:center;gap:10px;
+  background:var(--raised);border:1px solid var(--border-md);
+  border-radius:var(--r);padding:12px 16px;
+  min-width:240px;max-width:340px;box-shadow:var(--shadow);pointer-events:all;
+  animation:toastIn .28s cubic-bezier(.34,1.56,.64,1) both;
+}
+.toast.out{animation:toastOut .22s ease both}
+@keyframes toastIn{from{opacity:0;transform:translateX(16px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes toastOut{from{opacity:1;transform:none}to{opacity:0;transform:translateX(14px) scale(.95)}}
+.toast-ico{width:26px;height:26px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.toast-ico.ok {background:var(--green-soft);color:var(--green)}
+.toast-ico.err{background:var(--red-soft);  color:var(--red)}
+.toast-ico.inf{background:var(--accent-soft);color:#60A5FA}
+.toast-msg{flex:1;font-size:.8rem;color:var(--txt);line-height:1.4}
+.toast-x{color:var(--txt-3);font-size:14px;cursor:pointer;padding:2px;border:none;background:none;font-family:var(--font-b)}
+.toast-x:hover{color:var(--txt)}
+
+/* ════════════════════════════════════════════════════
+   RESPONSIVE — same breakpoints as create-post.html
+════════════════════════════════════════════════════ */
+@media(max-width:1024px){
+  .grid{grid-template-columns:1fr}
+  .preview-sidebar{position:static}
+}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:none;box-shadow:var(--shadow)}
+  .topbar{left:0;padding:0 16px}
+  .main{margin-left:0}
+  .menu-btn{display:flex!important}
+  .page{padding:20px 14px 48px}
+  .topbar-time{display:none}
+}
+@media(max-width:480px){
+  .actions{flex-wrap:wrap}
+  .media-tabs{gap:4px}
+  .m-tab{font-size:.7rem;padding:4px 10px}
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════
+     SIDEBAR
+════════════════════════════════════════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <div class="brand-ico">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 0 0-.07-.2c-.08-.06-.2-.04-.28-.02-.12.02-1.96 1.25-5.54 3.69-.52.36-1 .53-1.42.52-.47-.01-1.37-.26-2.03-.48-.82-.27-1.47-.42-1.42-.88.03-.25.38-.51 1.07-.78 4.18-1.82 6.97-3.02 8.38-3.61 3.98-1.66 4.81-1.95 5.35-1.96.12 0 .38.03.55.17.14.12.18.28.2.45l-.03.21z"/>
+      </svg>
+    </div>
+    <div>
+      <div class="brand-name">TG Scheduler</div>
+      <div class="brand-sub">Post Automation</div>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <div class="nav-label">Main</div>
+    <a class="nav-item" href="dashboard.html">
+      <span class="nav-ico">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+      </span>
+      Dashboard
+    </a>
+    <a class="nav-item" href="create-post.html">
+      <span class="nav-ico">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+        </svg>
+      </span>
+      Create Post
+    </a>
+    <div class="nav-label">Posts</div>
+    <a class="nav-item active" href="scheduled.html">
+      <span class="nav-ico">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </span>
+      Scheduled Posts
+      <span class="nav-pill s" id="navScheduled">–</span>
+    </a>
+    <a class="nav-item" href="published.html">
+      <span class="nav-ico">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </span>
+      Published Posts
+      <span class="nav-pill g" id="navPublished">–</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-foot">
+    <div class="status-dot"></div>
+    Scheduler Active
+  </div>
+</aside>
+
+<!-- ════════════════════════════════════════════
+     TOPBAR
+════════════════════════════════════════════ -->
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="Toggle sidebar">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+  <div class="topbar-title">Edit Post</div>
+  <div class="topbar-time" id="clock">--:--:-- --</div>
+</header>
+
+<!-- ════════════════════════════════════════════
+     MAIN PAGE
+════════════════════════════════════════════ -->
+<main class="main">
+  <div class="page">
+
+    <!-- Page header -->
+    <div class="page-head">
+      <div class="page-head-row">
+        <div>
+          <h1>Edit Post</h1>
+          <p>Update content and media — scheduled time is locked and cannot be changed here.</p>
+        </div>
+        <a class="back-link" href="scheduled.html">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+          </svg>
+          Back to Scheduled
+        </a>
+      </div>
+      <!-- Post meta pill (filled by JS) -->
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px">
+        <div class="post-meta-pill">
+          <span class="dot"></span>
+          Post ID: <strong id="metaPostId" style="color:var(--txt-2)">–</strong>
+        </div>
+        <div class="post-meta-pill" id="metaStatusPill" style="display:none">
+          <span class="dot"></span>
+          Status: <strong id="metaStatus" style="color:var(--txt-2)">–</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ GRID ══════════════════════════════ -->
+    <div class="grid">
+
+      <!-- LEFT COLUMN: FORM -->
+      <div style="display:flex;flex-direction:column;gap:18px">
+
+        <!-- ── CONTENT CARD ─────────────────── -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">
+              <div class="card-title-icon blue">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </div>
+              Post Content
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="form">
+              <div class="fg" id="fg-content">
+                <div class="char-row">
+                  <label class="label" for="postContent">Message <span class="req">*</span></label>
+                  <span class="char-count" id="charCount">0 / 4096</span>
+                </div>
+                <textarea
+                  class="textarea"
+                  id="postContent"
+                  placeholder="Edit your post message here…"
+                  maxlength="4096"
+                  rows="7"
+                  oninput="onContentInput()"
+                ></textarea>
+                <span class="err-msg">Post content is required.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── MEDIA CARD ───────────────────── -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">
+              <div class="card-title-icon sky">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
+              </div>
+              Media
+            </div>
+            <!-- Media type tabs -->
+            <div class="media-tabs" id="mediaTabs">
+              <button class="m-tab active" data-type="none"     onclick="setMediaType('none',this)">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="14" y2="18"/>
+                </svg>
+                Text only
+              </button>
+              <button class="m-tab" data-type="image"    onclick="setMediaType('image',this)">🖼 Image</button>
+              <button class="m-tab" data-type="video"    onclick="setMediaType('video',this)">🎬 Video</button>
+              <button class="m-tab" data-type="pdf"      onclick="setMediaType('pdf',this)">📄 PDF</button>
+              <button class="m-tab" data-type="carousel" onclick="setMediaType('carousel',this)">🖼🖼 Carousel</button>
+            </div>
+          </div>
+          <div class="card-body">
+
+            <!-- Current media display (shown when post has existing media and no new file selected) -->
+            <div id="currentMediaBox" class="current-media-box" style="display:none">
+              <div class="current-media-thumb" id="currentMediaThumb">📎</div>
+              <div class="current-media-info">
+                <div class="current-media-label" id="currentMediaLabel">Current media</div>
+                <div class="current-media-sub" id="currentMediaSub">Existing attachment</div>
+              </div>
+              <div class="replace-note">Will keep unless replaced</div>
+            </div>
+
+            <!-- No media state -->
+            <div id="noMediaState" style="font-size:.82rem;color:var(--txt-3);padding:4px 0">
+              This post has no media. Select a type above to attach files.
+            </div>
+
+            <!-- Upload area -->
+            <div id="uploadArea" class="upload-wrap" style="display:none">
+              <div class="upload-zone" id="uploadZone">
+                <input type="file" id="fileInput" onchange="handleFiles(this.files)"/>
+                <div class="upload-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                </div>
+                <div class="upload-title" id="uploadTitle">Drop new file here or click to browse</div>
+                <div class="upload-sub"  id="uploadSub">New file will replace existing media</div>
+              </div>
+              <div class="preview-grid" id="previewGrid"></div>
+              <div class="order-hint" id="carouselHint" style="display:none">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                Images sent in order shown. Click × to remove.
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ── LOCKED SCHEDULE CARD ─────────── -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">
+              <div class="card-title-icon amber">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <rect x="3" y="11" width="18" height="11" rx="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+              </div>
+              Scheduled Time
+            </div>
+            <span style="font-size:.7rem;color:var(--txt-3);background:var(--raised);
+              padding:3px 9px;border-radius:999px;border:1px solid var(--border)">
+              🔒 Locked
+            </span>
+          </div>
+          <div class="card-body">
+            <div class="locked-box">
+              <div class="locked-box-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+              </div>
+              <div class="locked-box-content">
+                <div class="locked-box-label">Scheduled Time — cannot be edited here</div>
+                <div class="locked-box-value" id="lockedTimeValue">Loading…</div>
+                <div class="locked-box-hint">
+                  To change the publish time, use the <strong>Reschedule</strong> action on the Scheduled Posts page.
+                </div>
+                <a class="locked-box-link" href="scheduled.html">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                  </svg>
+                  Go to Reschedule
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── FORM ACTIONS ──────────────────── -->
+        <div class="actions">
+          <button class="btn btn-ghost" onclick="window.location.href='scheduled.html'">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+            </svg>
+            Cancel
+          </button>
+          <button class="btn btn-primary" id="saveBtn" onclick="saveChanges()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <span class="btn-label">Save Changes</span>
+          </button>
+        </div>
+
+      </div><!-- /left col -->
+
+      <!-- RIGHT COLUMN: PREVIEW + INFO -->
+      <div class="preview-sidebar">
+
+        <!-- Live Telegram preview -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">
+              <div class="card-title-icon green">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </div>
+              Live Preview
+            </div>
+            <span style="font-size:.68rem;color:var(--txt-3);background:var(--raised);
+              padding:3px 8px;border-radius:999px;border:1px solid var(--border)">
+              Telegram
+            </span>
+          </div>
+          <div style="background:transparent">
+            <div class="tg-header">
+              <div class="tg-avatar">TG</div>
+              <div>
+                <div class="tg-chname">Your Channel</div>
+                <div class="tg-sub">Telegram · Post Preview</div>
+              </div>
+            </div>
+            <div class="tg-media" id="tgMedia">
+              <div class="tg-media-placeholder" id="tgMediaPh">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
+                <span>Media preview</span>
+              </div>
+              <img id="tgMediaImg" src="" alt="" style="display:none"/>
+            </div>
+            <div class="tg-body">
+              <div class="tg-text" id="tgText">
+                <span class="tg-placeholder">Your edited message will appear here…</span>
+              </div>
+            </div>
+            <div class="tg-footer">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+              <span id="tgTime">–</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Post Info card -->
+        <div class="info-card">
+          <div class="info-card-head">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--txt-3)">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            Post Information
+          </div>
+          <div class="info-rows">
+            <div class="info-row">
+              <span class="info-key">Post ID</span>
+              <span class="info-val mono" id="infoId">–</span>
+            </div>
+            <div class="info-row">
+              <span class="info-key">Status</span>
+              <span class="info-val" id="infoStatus">–</span>
+            </div>
+            <div class="info-row">
+              <span class="info-key">Media Type</span>
+              <span class="info-val" id="infoMedia">–</span>
+            </div>
+            <div class="info-row">
+              <span class="info-key">Scheduled</span>
+              <span class="info-val" id="infoScheduled" style="font-size:.75rem">–</span>
+            </div>
+            <div class="info-row" id="infoChangesRow" style="display:none">
+              <span class="info-key">Changes</span>
+              <span class="info-val">
+                <span class="change-chip" id="changeChip">
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+                  </svg>
+                  Unsaved
+                </span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /right col -->
+    </div><!-- /grid -->
+  </div><!-- /page -->
+</main>
+
+<!-- TOAST -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- ════════════════════════════════════════════
+     SCRIPT
+════════════════════════════════════════════ -->
+<script>
+/* ─────────────────────────────────────────────
+   CONFIG
+───────────────────────────────────────────── */
+const API_BASE = 'http://localhost:8000';
+
+/* ─────────────────────────────────────────────
+   STATE
+───────────────────────────────────────────── */
+let postId       = null;
+let originalPost = null;    /* data loaded from server */
+let selectedFiles = [];
+let mediaType    = 'none';
+let isDirty      = false;
+
+/* ─────────────────────────────────────────────
+   CLOCK
+───────────────────────────────────────────── */
+(function(){
+  const el   = document.getElementById('clock');
+  const tick = () => { if(el) el.textContent = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true}); };
+  tick(); setInterval(tick, 1000);
+})();
+
+/* ─────────────────────────────────────────────
+   MOBILE SIDEBAR
+───────────────────────────────────────────── */
+document.getElementById('menuBtn').addEventListener('click', () =>
+  document.getElementById('sidebar').classList.toggle('open')
+);
+document.addEventListener('click', e => {
+  const sb = document.getElementById('sidebar');
+  if(window.innerWidth <= 768 && sb.classList.contains('open')
+    && !sb.contains(e.target) && !document.getElementById('menuBtn').contains(e.target))
+    sb.classList.remove('open');
+});
+
+/* ─────────────────────────────────────────────
+   LOAD POST DATA FROM URL PARAM
+   Usage: edit-post.html?id=5
+───────────────────────────────────────────── */
+async function loadPost(){
+  const params = new URLSearchParams(window.location.search);
+  postId       = params.get('id');
+
+  if(!postId){
+    showToast('No post ID provided. Redirecting…', 'err');
+    setTimeout(() => window.location.href = 'scheduled.html', 1800);
+    return;
+  }
+
+  try {
+    /* Fetch all posts and find the matching one */
+    const res  = await fetch(`${API_BASE}/posts`);
+    if(!res.ok) throw new Error(`Server error: ${res.status}`);
+    const all  = await res.json();
+    const post = Array.isArray(all) ? all.find(p => String(p.id) === String(postId)) : null;
+
+    if(!post){
+      showToast('Post not found. Redirecting…', 'err');
+      setTimeout(() => window.location.href = 'scheduled.html', 1800);
+      return;
+    }
+
+    originalPost = post;
+    populateForm(post);
+    updateNavPills(all);
+  } catch(err){
+    showToast(err.message || 'Failed to load post.', 'err');
+  }
+}
+
+/* ─────────────────────────────────────────────
+   POPULATE FORM
+───────────────────────────────────────────── */
+function populateForm(post){
+  /* Meta pills */
+  document.getElementById('metaPostId').textContent    = `#${post.id}`;
+  document.getElementById('metaStatus').textContent    = post.status || 'pending';
+  document.getElementById('metaStatusPill').style.display = 'inline-flex';
+
+  /* Content */
+  const ta = document.getElementById('postContent');
+  ta.value = post.content || '';
+  onContentInput();                /* sync char counter + preview */
+
+  /* Scheduled time — locked display */
+  const fmted = fmtDate(post.scheduled_time);
+  document.getElementById('lockedTimeValue').textContent = fmted;
+  document.getElementById('tgTime').textContent          = fmted;
+
+  /* Right sidebar info */
+  document.getElementById('infoId').textContent        = `#${post.id}`;
+  document.getElementById('infoStatus').innerHTML      = statusBadge(post.status);
+  document.getElementById('infoMedia').innerHTML       = mediaBadge(post.media_type);
+  document.getElementById('infoScheduled').textContent = fmted;
+
+  /* Activate correct media tab and show current media box */
+  const type = post.media_type || 'none';
+  activateTab(type);
+  showCurrentMedia(type);
+}
+
+/* ─────────────────────────────────────────────
+   SHOW CURRENT MEDIA
+───────────────────────────────────────────── */
+function showCurrentMedia(type){
+  const box     = document.getElementById('currentMediaBox');
+  const thumb   = document.getElementById('currentMediaThumb');
+  const label   = document.getElementById('currentMediaLabel');
+  const sub     = document.getElementById('currentMediaSub');
+
+  if(!type || type === 'none'){
+    box.style.display = 'none';
+    return;
+  }
+
+  box.style.display = 'flex';
+
+  const mediaMap = {
+    image:    { icon:'🖼',  label:'Image',    sub:'Existing image attachment' },
+    video:    { icon:'🎬',  label:'Video',    sub:'Existing video attachment' },
+    pdf:      { icon:'📄',  label:'PDF',      sub:'Existing PDF document' },
+    carousel: { icon:'🖼🖼', label:'Carousel', sub:'Multiple images (carousel)' },
+  };
+  const m = mediaMap[type] || { icon:'📎', label:'Media', sub:'Existing attachment' };
+  thumb.textContent   = m.icon;
+  label.textContent   = m.label;
+  sub.textContent     = m.sub;
+}
+
+/* ─────────────────────────────────────────────
+   MEDIA TYPE TABS
+───────────────────────────────────────────── */
+const mediaConfigs = {
+  none:     { accept:'',                multiple:false, title:'Drop file here or click to browse',  sub:'Removing all media — post will be text-only' },
+  image:    { accept:'image/*',         multiple:false, title:'Drop an image here or click to browse', sub:'JPG, PNG, GIF, WebP — replaces existing image' },
+  video:    { accept:'video/*',         multiple:false, title:'Drop a video here or click to browse',  sub:'MP4, MOV, AVI, MKV — replaces existing video' },
+  pdf:      { accept:'application/pdf', multiple:false, title:'Drop a PDF here or click to browse',    sub:'PDF documents — replaces existing file' },
+  carousel: { accept:'image/*',         multiple:true,  title:'Drop multiple images or click to browse', sub:'Up to 10 images — replaces existing carousel' },
+};
+
+function activateTab(type){
+  mediaType = type;
+  document.querySelectorAll('.m-tab').forEach(t => t.classList.remove('active'));
+  const tab = document.querySelector(`.m-tab[data-type="${type}"]`);
+  if(tab) tab.classList.add('active');
+  renderUploadArea(type);
+}
+
+function setMediaType(type, btn){
+  mediaType = type;
+  selectedFiles = [];
+  document.querySelectorAll('.m-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderUploadArea(type);
+  document.getElementById('previewGrid').innerHTML = '';
+  document.getElementById('fileInput').value = '';
+  hideTgMedia();
+  markDirty();
+}
+
+function renderUploadArea(type){
+  const noMedia  = document.getElementById('noMediaState');
+  const upArea   = document.getElementById('uploadArea');
+  const hint     = document.getElementById('carouselHint');
+  const fi       = document.getElementById('fileInput');
+  const currBox  = document.getElementById('currentMediaBox');
+
+  if(type === 'none'){
+    noMedia.style.display = 'block';
+    upArea.style.display  = 'none';
+    /* hide current media if switching to none */
+    if(originalPost && originalPost.media_type !== 'none') currBox.style.display = 'none';
+    return;
+  }
+
+  noMedia.style.display = 'none';
+  upArea.style.display  = 'block';
+
+  const cfg = mediaConfigs[type] || mediaConfigs.image;
+  fi.accept   = cfg.accept;
+  fi.multiple = cfg.multiple;
+  document.getElementById('uploadTitle').textContent = cfg.title;
+  document.getElementById('uploadSub').textContent   = cfg.sub;
+  hint.style.display = type === 'carousel' ? 'flex' : 'none';
+
+  /* Show current media box if type matches original and no new file yet */
+  if(originalPost && originalPost.media_type === type && selectedFiles.length === 0){
+    showCurrentMedia(type);
+  }
+}
+
+/* ─────────────────────────────────────────────
+   DRAG & DROP
+───────────────────────────────────────────── */
+const zone = document.getElementById('uploadZone');
+zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('drag'); });
+zone.addEventListener('dragleave', ()  => zone.classList.remove('drag'));
+zone.addEventListener('drop', e => {
+  e.preventDefault();
+  zone.classList.remove('drag');
+  handleFiles(e.dataTransfer.files);
+});
+
+/* ─────────────────────────────────────────────
+   FILE HANDLER
+───────────────────────────────────────────── */
+function handleFiles(rawFiles){
+  const files = Array.from(rawFiles);
+  if(!files.length) return;
+
+  if(mediaType === 'carousel') selectedFiles = [...selectedFiles, ...files].slice(0, 10);
+  else                         selectedFiles = [files[0]];
+
+  /* Hide current-media box — new file is replacing it */
+  document.getElementById('currentMediaBox').style.display = 'none';
+
+  renderPreviews();
+  updateLiveMediaPreview();
+  markDirty();
+}
+
+function renderPreviews(){
+  const grid = document.getElementById('previewGrid');
+  grid.innerHTML = '';
+  selectedFiles.forEach((f, i) => {
+    const item = document.createElement('div');
+    item.className = 'prev-item';
+    if(f.type.startsWith('image/')){
+      const url = URL.createObjectURL(f);
+      item.innerHTML = `
+        <img src="${url}" alt="preview"/>
+        <div class="prev-overlay">
+          <button class="prev-del" onclick="removeFile(${i})" title="Remove">✕</button>
+          <span class="prev-name">${f.name}</span>
+        </div>`;
+    } else {
+      const icon = f.type === 'application/pdf' ? '📄' : f.type.startsWith('video/') ? '🎬' : '📎';
+      item.innerHTML = `
+        <div class="prev-file">
+          <span class="prev-file-icon">${icon}</span>
+          <span class="prev-file-name">${f.name}</span>
+          <span class="prev-file-size">${fmtSize(f.size)}</span>
+        </div>
+        <div class="prev-overlay">
+          <button class="prev-del" onclick="removeFile(${i})" title="Remove">✕</button>
+        </div>`;
+    }
+    grid.appendChild(item);
+  });
+}
+
+function removeFile(idx){
+  selectedFiles.splice(idx, 1);
+  if(selectedFiles.length === 0 && originalPost && originalPost.media_type === mediaType){
+    showCurrentMedia(mediaType);
+  }
+  renderPreviews();
+  updateLiveMediaPreview();
+}
+
+/* ─────────────────────────────────────────────
+   LIVE PREVIEW
+───────────────────────────────────────────── */
+function onContentInput(){
+  const val = document.getElementById('postContent').value;
+  const cc  = document.getElementById('charCount');
+  cc.textContent = `${val.length} / 4096`;
+  cc.className   = 'char-count' + (val.length > 3800 ? ' over' : val.length > 3500 ? ' warn' : '');
+  const tgText   = document.getElementById('tgText');
+  if(val.trim()){
+    tgText.textContent = val;
+    tgText.style.color = 'var(--txt-2)';
+  } else {
+    tgText.innerHTML = '<span class="tg-placeholder">Your edited message will appear here…</span>';
+  }
+  if(originalPost && val.trim() !== (originalPost.content || '').trim()) markDirty();
+}
+
+function updateLiveMediaPreview(){
+  const tgMedia = document.getElementById('tgMedia');
+  const img     = document.getElementById('tgMediaImg');
+  const ph      = document.getElementById('tgMediaPh');
+  if(selectedFiles.length > 0 && selectedFiles[0].type.startsWith('image/')){
+    img.src = URL.createObjectURL(selectedFiles[0]);
+    img.style.display = 'block';
+    ph.style.display  = 'none';
+    tgMedia.classList.add('visible');
+  } else if(selectedFiles.length > 0){
+    img.style.display = 'none';
+    ph.style.display  = 'flex';
+    tgMedia.classList.add('visible');
+  } else {
+    hideTgMedia();
+  }
+}
+
+function hideTgMedia(){
+  document.getElementById('tgMedia').classList.remove('visible');
+  document.getElementById('tgMediaImg').style.display = 'none';
+  document.getElementById('tgMediaImg').src = '';
+  document.getElementById('tgMediaPh').style.display  = 'flex';
+}
+
+/* ─────────────────────────────────────────────
+   DIRTY STATE TRACKER
+───────────────────────────────────────────── */
+function markDirty(){
+  isDirty = true;
+  document.getElementById('infoChangesRow').style.display = 'flex';
+}
+
+/* ─────────────────────────────────────────────
+   VALIDATE
+───────────────────────────────────────────── */
+function validate(){
+  const content = document.getElementById('postContent').value.trim();
+  const fgC     = document.getElementById('fg-content');
+  fgC.classList.toggle('invalid', !content);
+  return !!content;
+}
+
+/* ─────────────────────────────────────────────
+   SAVE  →  PUT /{post_id}
+───────────────────────────────────────────── */
+async function saveChanges(){
+  if(!validate()) return;
+
+  const btn = document.getElementById('saveBtn');
+  btn.classList.add('loading'); btn.disabled = true;
+
+  const content = document.getElementById('postContent').value.trim();
+  const fd      = new FormData();
+  fd.append('content', content);
+
+  /* Append media only if new files were selected */
+  if(selectedFiles.length > 0){
+    if(mediaType === 'carousel') selectedFiles.forEach(f => fd.append('media', f));
+    else                         fd.append('media', selectedFiles[0]);
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/edit_post/${postId}`, { method:'PUT', body:fd });
+    if(!res.ok){
+      let msg = `Error ${res.status}`;
+      try { const e = await res.json(); msg = e.detail || msg; } catch{}
+      throw new Error(msg);
+    }
+    showToast('Post updated successfully! ✅', 'ok');
+    isDirty = false;
+    document.getElementById('infoChangesRow').style.display = 'none';
+    setTimeout(() => window.location.href = 'scheduled.html', 1400);
+  } catch(err){
+    showToast(err.message || 'Failed to save changes.', 'err');
+    btn.classList.remove('loading'); btn.disabled = false;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   WARN ON UNSAVED CHANGES
+───────────────────────────────────────────── */
+window.addEventListener('beforeunload', e => {
+  if(isDirty){ e.preventDefault(); e.returnValue = ''; }
+});
+
+/* ─────────────────────────────────────────────
+   NAV PILLS
+───────────────────────────────────────────── */
+function updateNavPills(all){
+  const scheduled = all.filter(p => p.status === 'pending').length;
+  const published = all.filter(p => p.status === 'sent').length;
+  document.getElementById('navScheduled').textContent = scheduled;
+  document.getElementById('navPublished').textContent = published;
+}
+
+/* ─────────────────────────────────────────────
+   TOAST — exact from create-post.html
+───────────────────────────────────────────── */
+function showToast(msg, type='inf'){
+  const wrap = document.getElementById('toastWrap');
+  const t    = document.createElement('div');
+  t.className = 'toast';
+  const icons = {
+    ok:  `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`,
+    err: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+    inf: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+  };
+  t.innerHTML = `
+    <div class="toast-ico ${type}">${icons[type]||icons.inf}</div>
+    <span class="toast-msg">${msg}</span>
+    <button class="toast-x" onclick="dismissToast(this.parentElement)">✕</button>`;
+  wrap.appendChild(t);
+  const timer = setTimeout(() => dismissToast(t), type === 'err' ? 5000 : 3500);
+  t._timer = timer;
+}
+function dismissToast(el){
+  clearTimeout(el._timer);
+  el.classList.add('out');
+  el.addEventListener('animationend', () => el.remove(), {once:true});
+}
+
+/* ─────────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────────── */
+function fmtDate(iso){
+  if(!iso) return '—';
+  try {
+    return new Date(iso).toLocaleString('en-US',{
+      month:'short',day:'numeric',year:'numeric',
+      hour:'2-digit',minute:'2-digit',hour12:true
+    });
+  } catch { return iso }
+}
+function fmtSize(b){
+  if(b < 1024)    return `${b} B`;
+  if(b < 1048576) return `${(b/1024).toFixed(1)} KB`;
+  return `${(b/1048576).toFixed(1)} MB`;
+}
+function mediaBadge(t){
+  const m = {
+    none:     ['badge-none',    'Text only'],
+    image:    ['badge-img',     'Image'],
+    video:    ['badge-video',   'Video'],
+    pdf:      ['badge-pdf',     'PDF'],
+    carousel: ['badge-carousel','Carousel'],
+  };
+  const [cls, label] = m[t] || m.none;
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+function statusBadge(s){
+  return s === 'sent'
+    ? `<span class="badge" style="background:var(--green-soft);color:var(--green);border:1px solid var(--green-bd)">Sent</span>`
+    : `<span class="badge badge-pending">Pending</span>`;
+}
+
+/* ─────────────────────────────────────────────
+   BOOT
+───────────────────────────────────────────── */
+loadPost();
+</script>
+</body>
+</html>
