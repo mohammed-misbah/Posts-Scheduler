@@ -662,7 +662,7 @@ input[type="datetime-local"]{color-scheme:dark}
               <button class="m-tab" data-type="image" onclick="setMediaType('image',this)">🖼 Image</button>
               <button class="m-tab" data-type="video" onclick="setMediaType('video',this)">🎬 Video</button>
               <button class="m-tab" data-type="pdf" onclick="setMediaType('pdf',this)">📄 PDF</button>
-              <button class="m-tab" data-type="carousel" onclick="setMediaType('carousel',this)">🖼🖼 Carousel</button>
+              <button class="m-tab" onclick="openCarouselBuilder()">🖼🖼 Build Carousel</button>
             </div>
           </div>
           <div class="card-body">
@@ -742,7 +742,7 @@ input[type="datetime-local"]{color-scheme:dark}
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>
             Reset
           </button>
-          <button class="btn btn-primary" id="submitBtn" onclick="submitPost()">
+          <button type="button" class="btn btn-primary" id="submitBtn" onclick="submitPost()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             <span class="btn-label">Schedule Post</span>
           </button>
@@ -890,7 +890,9 @@ function setMediaType(type, btn){
   mediaType = type;
   selectedFiles = [];
   document.querySelectorAll('.m-tab').forEach(t => t.classList.remove('active'));
-  btn.classList.add('active');
+  if(btn){
+    btn.classList.add('active');
+  }
 
   const noMedia  = document.getElementById('noMediaState');
   const upArea   = document.getElementById('uploadArea');
@@ -1043,6 +1045,8 @@ function validate(){
 
 /* ── SUBMIT ── */
 async function submitPost(){
+  console.log("MEDIA TYPE:", mediaType);
+  console.log("PATHS:", window.carouselPaths);
   if(!validate()) return;
 
   const btn = document.getElementById('submitBtn');
@@ -1057,12 +1061,11 @@ async function submitPost(){
   fd.append('content', content);
   fd.append('scheduled_time', isoTime);
 
-  if(selectedFiles.length > 0){
-    if(mediaType === 'carousel'){
-      selectedFiles.forEach(f => fd.append('media', f));
-    } else {
-      fd.append('media', selectedFiles[0]);
-    }
+  if (mediaType === "carousel" && window.carouselPaths) {
+    fd.append("media_paths", JSON.stringify(window.carouselPaths));
+  } 
+  else if (selectedFiles.length > 0) {
+    fd.append('media', selectedFiles[0]);
   }
 
   try {
@@ -1074,12 +1077,11 @@ async function submitPost(){
     }
     await res.json();
     showToast('Post scheduled successfully! 🎉', 'ok');
-    setTimeout(() => {
-      // Redirect to scheduled posts page
-      // Replace with: window.location.href = '/scheduled';
-      showToast('Redirecting to Scheduled Posts…', 'ok');
-    }, 1400);
-    resetForm();
+    
+    console.log("Redirecting immediately...");
+    window.location.replace("scheduled.html?refresh=1");
+    return;
+
   } catch(err){
     showToast(err.message || 'Failed to schedule post. Please try again.', 'err');
   } finally {
@@ -1157,6 +1159,72 @@ function formatSize(b){
   const pad = n => String(n).padStart(2,'0');
   inp.min = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
 })();
+
+function openCarouselBuilder() {
+  const message = document.getElementById("postContent").value.trim();
+
+  if (!message) {
+    alert("Write something first");
+    return;
+  }
+
+  const encoded = encodeURIComponent(message);
+
+  window.location.href = `carousel-builder.html?content=${encoded}`;
+}
+
+
+window.addEventListener("load", async () => {
+
+  const params = new URLSearchParams(window.location.search);
+
+  // restore message
+  const content = params.get("content");
+
+  if (content) {
+    const decoded = decodeURIComponent(content);
+    document.getElementById("postContent").value = decoded;
+    onContentInput();
+  }
+
+  const carousel = params.get("carousel");
+
+  if (!carousel) {
+  window.carouselPaths = null;
+  return;
+}
+
+  const paths = JSON.parse(decodeURIComponent(carousel));
+
+  mediaType = "carousel";
+  selectedFiles = [];
+  window.carouselPaths = paths;
+  const btn = document.querySelector('[onclick*="carousel-builder"]');
+  setMediaType("carousel", btn);
+  
+  if (paths.length > 0) {
+  const img = document.getElementById('tgMediaImg');
+  img.src = "http://localhost:8000/" + paths[0];
+  img.style.display = 'block';
+  document.getElementById('tgMedia').classList.add('visible');
+}
+  // for (let i = 0; i < paths.length; i++) {
+
+  //   const url = paths[i].startsWith("http") ? paths[i]: "http://localhost:8000/" + paths[i];
+
+  //   const res = await fetch(url);
+  //   const blob = await res.blob();
+
+  //   const file = new File([blob], `slide-${i+1}.png`, { type: blob.type });
+
+  //   selectedFiles.push(file);
+  // }
+  // document.querySelectorAll('.m-tab').forEach(t => t.classList.remove('active'));
+
+  renderPreviews();
+  updateLiveMediaPreview();
+
+});
 </script>
 </body>
 </html>

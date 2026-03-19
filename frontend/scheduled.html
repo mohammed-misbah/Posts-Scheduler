@@ -1378,8 +1378,22 @@ function mediaBadge(t){
 /* ─────────────────────────────────────────────
    BOOT
 ───────────────────────────────────────────── */
-loadData();
-/* Auto-refresh every 60 seconds */
+async function initPage() {
+  await loadData();
+
+  const params = new URLSearchParams(window.location.search);
+
+  if (params.get("refresh")) {
+    // One controlled retry (not multiple random calls)
+    setTimeout(loadData, 800);
+
+    showToast("Post scheduled successfully 🎉", "ok");
+  }
+}
+
+initPage();
+
+// background refresh
 setInterval(loadData, 60000);
 </script>
 </body>
