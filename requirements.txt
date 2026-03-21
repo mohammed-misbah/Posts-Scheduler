@@ -7,3 +7,5 @@ requests
 python-multipart
 psycopg2-binary
 pillow
+celery
+redis
