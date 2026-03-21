@@ -816,9 +816,10 @@ input[type="datetime-local"]{color-scheme:dark}
 <div class="toast-wrap" id="toastWrap"></div>
 
 <!-- ── SCRIPT ──────────────────────────────── -->
+ <script src="config.js"></script>
 <script>
 /* ── CONFIG ── Change this to your backend URL */
-const API_BASE = 'http://localhost:8000';
+// const API_BASE = 'http://localhost:8000';
 
 /* ── STATE ── */
 let mediaType = 'none';
@@ -1204,22 +1205,10 @@ window.addEventListener("load", async () => {
   
   if (paths.length > 0) {
   const img = document.getElementById('tgMediaImg');
-  img.src = "http://localhost:8000/" + paths[0];
+ img.src = `${API_BASE}/${paths[0]}`;
   img.style.display = 'block';
   document.getElementById('tgMedia').classList.add('visible');
 }
-  // for (let i = 0; i < paths.length; i++) {
-
-  //   const url = paths[i].startsWith("http") ? paths[i]: "http://localhost:8000/" + paths[i];
-
-  //   const res = await fetch(url);
-  //   const blob = await res.blob();
-
-  //   const file = new File([blob], `slide-${i+1}.png`, { type: blob.type });
-
-  //   selectedFiles.push(file);
-  // }
-  // document.querySelectorAll('.m-tab').forEach(t => t.classList.remove('active'));
 
   renderPreviews();
   updateLiveMediaPreview();

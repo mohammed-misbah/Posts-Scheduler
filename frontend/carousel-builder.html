@@ -1050,7 +1050,7 @@ async function uploadCarousel(files) {
     formData.append("files", file);
   });
 
-  const response = await fetch("http://localhost:8000/upload-carousel", {
+  const response = await fetch(`${API_BASE}/upload-carousel`, {, {
     method: "POST",
     body: formData
   });
