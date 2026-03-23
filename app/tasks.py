@@ -41,8 +41,6 @@ def send_post_task(self, post_id: int):
 
         # BASE_DIR = os.getcwd()
         BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        for img in images:
-            print("Checking image path:", img, "Exists:", os.path.exists(img))
 
         if post.media_type == "none":
             send_long_message(post.content)
@@ -61,6 +59,9 @@ def send_post_task(self, post_id: int):
 
         elif post.media_type == "carousel" and media_files:
             images = [os.path.join(BASE_DIR, m.file_path) for m in media_files]
+
+            for img in images:
+                print("Checking image path:", img, "Exists:", os.path.exists(img))
 
             send_long_message(post.content)
             time.sleep(0.8)
