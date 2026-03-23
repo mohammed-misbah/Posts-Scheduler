@@ -39,7 +39,10 @@ def send_post_task(self, post_id: int):
             .all()
         )
 
-        BASE_DIR = os.getcwd()
+        # BASE_DIR = os.getcwd()
+        BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        for img in images:
+            print("Checking image path:", img, "Exists:", os.path.exists(img))
 
         if post.media_type == "none":
             send_long_message(post.content)
@@ -62,10 +65,14 @@ def send_post_task(self, post_id: int):
             send_long_message(post.content)
             time.sleep(0.8)
 
-            res = send_carousel_as_pdf(images, "")
-
-            if not res or not res.get("ok"):
-                raise Exception("Telegram failed")
+            try:
+                res = send_carousel_as_pdf(images, "")
+                print("Telegram response:", res)
+                if not res or not res.get("ok"):
+                    raise Exception("Telegram failed")
+            except Exception as e:
+                print("Carousel error:", str(e))
+                raise
 
         # success
         post.status = "sent"

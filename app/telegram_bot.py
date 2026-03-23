@@ -133,9 +133,11 @@ def send_carousel_as_pdf(images, caption):
                 "caption": caption
             }
 
-            response = requests.post(url, data=data, files=files)
+            response = requests.post(url, data=data, files=files, timeout=20)
 
             print("PDF RESPONSE:", response.text)
+            print("STATUS:", response.status_code)
+            print("BODY:", response.text)
 
         return response.json()
 
