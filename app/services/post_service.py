@@ -8,6 +8,7 @@ from app.models.media import Media
 from sqlalchemy.orm import Session
 from app.models.post import Post
 from app.models.media import Media
+import os
 
 
 def create_post(db: Session, content: str, scheduled_time, media_path: str = None):
@@ -47,16 +48,23 @@ def get_post_by_id(db: Session, post_id: int):
     return db.query(Post).filter(Post.id == post_id).first()
 
 
-def delete_post(db: Session, post_id: int):
 
+def delete_post(db: Session, post_id: int):
     post = db.query(Post).filter(Post.id == post_id).first()
 
     if not post:
         return None
 
-    db.query(Media).filter(Media.post_id == post_id).delete()
+    # Delete all media files (image, video, pdf, carousel)
+    for media in post.media:
+        try:
+            if media.file_path and os.path.exists(media.file_path):
+                os.remove(media.file_path)
+        except Exception as e:
+            print(f"File delete error: {media.file_path} -> {e}")
 
+    # Delete post (media rows auto deleted via cascade)
     db.delete(post)
     db.commit()
 
-    return post
+    return True
